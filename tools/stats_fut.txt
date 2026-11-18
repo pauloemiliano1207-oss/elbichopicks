@@ -1,0 +1,122 @@
+# Estadísticas por equipo (fuente: futboltotal.futbol, 17 nov 2026)
+# Equipo | GF GC | PJ_local GF_local GC_local | PJ_visita GF_visita GC_visita | Forma (últimos 5, el más reciente al final)
+[epl]
+Arsenal|15 5|5 10 2|5 5 3|GGGGG
+Brighton|26 7|5 15 1|5 11 6|GGPGG
+Manchester City|21 13|5 11 7|5 10 6|GGPPP
+Liverpool|14 10|5 4 6|5 10 4|PGGPG
+Chelsea|19 16|5 13 8|5 6 8|GGPGP
+Everton|12 10|5 8 5|5 4 5|EPPGG
+Bournemouth|16 14|5 7 4|5 9 10|PGGGG
+Brentford|16 11|5 10 3|5 6 8|EPEGP
+Leeds United|10 8|5 7 3|5 3 5|PEEPG
+Aston Villa|14 17|5 6 7|5 8 10|EGGEE
+Tottenham|10 11|5 7 6|5 3 5|EGGGP
+Newcastle|13 16|5 6 7|5 7 9|PPGPE
+Hull City|11 11|5 7 5|5 4 6|EPEEP
+Ipswich Town|15 20|5 6 7|5 9 13|GPEEP
+Fulham|10 12|5 7 8|5 3 4|PGGEE
+Nottingham Forest|9 13|5 3 4|5 6 9|PPEPG
+Coventry City|10 19|5 7 9|5 3 10|GPPGP
+Manchester United|14 19|5 10 11|5 4 8|EEPPE
+Sunderland|8 17|5 2 4|5 6 13|PPEPG
+Crystal Palace|10 24|5 7 13|5 3 11|GPPPP
+[laliga]
+Barcelona|48 13|6 24 7|6 24 6|GGPGG
+Real Madrid|31 10|5 17 3|7 14 7|GGGGG
+Atlético de Madrid|23 10|6 12 5|6 11 5|GGGGP
+Real Betis|20 15|6 12 8|6 8 7|GPEGG
+Real Sociedad|21 20|6 8 7|6 13 13|GGGPG
+Sevilla|17 19|6 7 7|6 10 12|EPGPE
+Athletic Club|15 11|6 11 5|5 4 6|EPGGE
+Villarreal|17 15|6 8 7|6 9 8|PEGPG
+Deportivo La Coruña|15 14|6 8 6|6 7 8|PEPGE
+Racing Santander|17 30|6 11 11|6 6 19|EPGPG
+Celta de Vigo|10 10|7 9 6|5 1 4|EGEPE
+Alavés|15 17|6 11 6|6 4 11|PPEPE
+Espanyol|13 14|6 6 7|6 7 7|EPPGE
+Rayo Vallecano|15 21|5 9 7|6 6 14|EEPGP
+Getafe|8 18|6 8 4|6 0 14|PEPGP
+Osasuna|12 23|6 5 4|6 7 19|PGPPE
+Levante|16 21|5 13 12|7 3 9|EGPPE
+Elche|14 20|6 4 14|6 10 6|EEGPP
+Valencia|8 20|7 3 14|5 5 6|EEPGP
+Málaga|9 23|6 6 12|6 3 11|EPEPP
+[seriea]
+Lazio|25 9|5 10 5|6 15 4|GGGGE
+Inter|28 13|6 19 7|5 9 6|GGGPG
+Roma|31 10|6 17 5|5 14 5|GEGGG
+Milan|23 13|5 13 7|6 10 6|GGPGG
+Como|18 10|4 5 1|7 13 9|GGGGP
+Frosinone|24 15|6 16 6|5 8 9|GEGGP
+Juventus|15 12|5 7 4|6 8 8|PGPGE
+Bologna|16 14|5 6 8|6 10 6|PGGGG
+Cagliari|10 15|5 3 4|6 7 11|PPPPG
+Napoli|18 14|5 9 6|6 9 8|PEGPE
+Torino|15 17|6 8 11|5 7 6|GGPPE
+Atalanta|17 20|6 11 11|5 6 9|PEEPG
+Genoa|11 16|7 8 10|4 3 6|PGGGP
+Lecce|12 22|5 5 12|6 7 10|GPPPE
+Fiorentina|17 25|6 7 13|5 10 12|PPEGE
+Parma|9 17|6 4 8|5 5 9|PPEGP
+Sassuolo|16 29|5 10 14|6 6 15|PPPPP
+Monza|17 25|5 9 9|6 8 16|GPPPP
+Venezia|8 21|6 5 11|5 3 10|GPPPG
+Udinese|12 25|6 4 14|5 8 11|PPEPP
+[bund]
+Bayern Múnich|29 9|4 20 4|5 9 5|EGGEG
+Borussia Dortmund|16 7|5 10 3|4 6 4|EEGEG
+Freiburg|20 10|5 14 5|4 6 5|GPPGG
+RB Leipzig|27 13|5 23 2|4 4 11|GPGGG
+Bayer Leverkusen|20 17|4 10 5|5 10 12|GGPPG
+Werder Bremen|17 15|4 10 5|5 7 10|EEGGP
+Elversberg|17 18|4 12 8|5 5 10|PGPGP
+Stuttgart|15 15|4 7 5|5 8 10|GPPGG
+Hoffenheim|16 17|5 11 8|4 5 9|PGGPG
+Eintracht Frankfurt|15 20|4 7 7|5 8 13|PGPGE
+Hamburgo|10 20|4 6 7|5 4 13|GGPPG
+Mainz|18 19|5 7 12|4 11 7|PGPPP
+Paderborn|8 11|5 6 6|4 2 5|PEGEE
+Augsburg|20 20|5 9 7|4 11 13|EPEPP
+Colonia|10 14|5 7 6|4 3 8|GPEEP
+Union Berlin|7 21|5 6 7|4 1 14|GEEEP
+Schalke 04|5 11|4 0 3|5 5 8|PPEPP
+Borussia M'gladbach|12 25|4 7 10|5 5 15|PPGEP
+[ligue1]
+PSG|22 10|4 7 3|6 15 7|GGGGG
+Lille|14 7|5 7 3|5 7 4|GEEGG
+Paris FC|17 10|5 12 5|5 5 5|PGPGG
+Marseille|22 14|5 13 8|5 9 6|GGGGG
+Lyon|15 9|5 12 3|5 3 6|PGPGP
+Nice|15 12|5 10 5|5 5 7|GPGGG
+Monaco|13 11|4 7 4|6 6 7|EPEPE
+Rennes|21 21|6 14 7|4 7 14|GPGPP
+Brest|18 12|5 10 6|5 8 6|GEPGG
+Lorient|9 8|5 5 6|5 4 2|GGEPG
+Lens|17 15|5 10 7|5 7 8|GGGPP
+Toulouse|15 14|5 6 6|5 9 8|EGEPG
+Strasbourg|18 22|4 9 6|6 9 16|PPPGP
+Auxerre|13 24|5 5 6|5 8 18|PGEPP
+Le Mans|12 19|5 7 9|5 5 10|PPEPE
+Angers|9 19|6 5 11|4 4 8|PPEPP
+Troyes|7 17|5 5 11|5 2 6|PPEGP
+Le Havre|9 22|6 3 13|4 6 9|PPPPP
+[ligamx]
+Cruz Azul|37 26|8 19 13|8 18 13|GGGGG
+América|38 23|8 15 8|8 23 15|GPEEE
+Guadalajara|26 15|8 15 9|8 11 6|EGGGE
+Toluca|35 21|8 22 11|8 13 10|EEEEG
+Atlas|27 30|9 13 21|7 14 9|GPGGP
+Santos Laguna|23 20|8 11 3|8 12 17|GGPGG
+Monterrey|27 25|8 16 11|8 11 14|GPEPG
+León|23 21|8 14 11|8 9 10|PGEPE
+Pachuca|29 20|7 13 13|9 16 7|PPGGG
+Tijuana|25 22|8 14 7|8 11 15|EGEEP
+Pumas|24 26|8 12 14|8 12 12|GPEGE
+Querétaro|18 24|8 8 12|8 10 12|PPPPP
+Puebla|19 23|7 8 12|9 11 11|EPPPG
+Atlético San Luis|19 24|9 9 13|7 10 11|EGGPP
+Tigres|17 25|7 11 10|9 6 15|EPEPP
+Atlante|16 26|8 7 12|8 9 14|PGPPP
+Necaxa|17 28|9 10 15|7 7 13|PPEPG
+Juárez|13 34|8 8 13|8 5 21|PPEGG

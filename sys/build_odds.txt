@@ -1,0 +1,46 @@
+"""El Bicho Picks · procesa la foto de cuotas más reciente (The Odds API).
+Uso: python3 bicho_build_odds.py <carpeta_con_snapshots> <bicho_senales.json> <salida_odds.json>
+- Probabilidad de referencia: Pinnacle sin margen.
+- Señal (en prueba): alguna casa (no exchange) paga >2% sobre la cuota justa de Pinnacle, con cuota <= 6.
+- Cada señal se guarda una sola vez (inmutable). En cada foto posterior, si el partido aún no empieza,
+  se actualiza la cuota justa de Pinnacle 'última vista' (aproximación a la cuota de cierre).
+- CLV = cuota de la señal / cuota justa de cierre - 1. Si es positivo de forma sostenida, hay ventaja real."""
+import json,sys,glob,os,datetime as dt
+SN={'soccer_epl':'Premier League','soccer_spain_la_liga':'LaLiga','soccer_italy_serie_a':'Serie A','soccer_germany_bundesliga':'Bundesliga','soccer_france_ligue_one':'Ligue 1','soccer_mexico_ligamx':'Liga MX','soccer_uefa_champs_league':'Champions League','basketball_nba':'NBA','americanfootball_nfl':'NFL'}
+EXCH={'betfair_ex_eu','matchbook','betfair_ex_uk'}
+snapdir,sigf,outf=sys.argv[1:4]
+snaps=sorted(glob.glob(os.path.join(snapdir,'bicho_cuotas_*.json')))
+S=json.load(open(snaps[-1]));taken=S['taken']
+sig=json.load(open(sigf)) if os.path.exists(sigf) else {'signals':[]}
+idx={(s['id'],s['out']):s for s in sig['signals']}
+out=[]
+for sk,games in S['data'].items():
+    if not isinstance(games,list):continue
+    for g in games:
+        names=[g['home_team'],g['away_team']]+(['Draw'] if sk.startswith('soccer') else [])
+        prices={}
+        for b in g['bookmakers']:
+            for m in b['markets']:
+                if m['key']=='h2h':prices[b['key']]={o['name']:o['price'] for o in m['outcomes']}
+        pin=prices.get('pinnacle')
+        if not pin or any(n not in pin for n in names):continue
+        inv=[1/pin[n] for n in names];s=sum(inv);fair=[x/s for x in inv]
+        started=g['commence_time']<=taken
+        best=[]
+        for n,p in zip(names,fair):
+            cand=[(v[n],k) for k,v in prices.items() if n in v and k not in EXCH and k!='pinnacle']
+            if not cand:best.append(None);continue
+            o,k=max(cand);e=p*o-1;best.append(dict(odd=o,book=k,edge=round(e,4)))
+            key=(g['id'],n)
+            if key in idx and not started:idx[key]['close_fair']=round(1/p,4);idx[key]['close_at']=taken
+            if key not in idx and not started and e>0.02 and o<=6:
+                r=dict(id=g['id'],out=n,lg=SN.get(sk,sk),h=g['home_team'],a=g['away_team'],t=g['commence_time'],at=taken,odd=o,book=k,fair=round(1/p,4),close_fair=round(1/p,4),close_at=taken)
+                sig['signals'].append(r);idx[key]=r
+        if not started:out.append(dict(lg=SN.get(sk,sk),t=g['commence_time'],h=g['home_team'],a=g['away_team'],labels=names,p=[round(x,4) for x in fair],best=best,nb=len(prices)))
+out.sort(key=lambda e:e['t'])
+done=[s for s in sig['signals'] if s['t']<=taken and s['close_at']>s['at']]
+clv=[s['odd']/s['close_fair']-1 for s in done]
+summ=dict(n_signals=len(sig['signals']),n_closed=len(done),clv=round(sum(clv)/len(clv),4) if clv else None,pos=round(sum(c>0 for c in clv)/len(clv),3) if clv else None,since=sig['signals'][0]['at'] if sig['signals'] else None)
+json.dump(sig,open(sigf,'w'))
+json.dump(dict(taken=taken,src='The Odds API · región EU',events=out,track=summ),open(outf,'w'))
+print(json.dumps(summ),len(out),'eventos')

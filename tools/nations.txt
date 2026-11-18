@@ -1,0 +1,105 @@
+# Selecciones nacionales: ratings Elo (fuente: World Football Elo Ratings, eloratings.net/World.tsv)
+# código Elo -> (nombre en español, confederación, código ISO para la bandera, abreviatura de 3 letras)
+NAT = {
+# UEFA
+"ES":("España","UEFA","ES","ESP"),"EN":("Inglaterra","UEFA","GB-ENG","ENG"),"FR":("Francia","UEFA","FR","FRA"),"PT":("Portugal","UEFA","PT","POR"),
+"BE":("Bélgica","UEFA","BE","BEL"),"CH":("Suiza","UEFA","CH","SUI"),"DE":("Alemania","UEFA","DE","GER"),"NL":("Países Bajos","UEFA","NL","NED"),
+"NO":("Noruega","UEFA","NO","NOR"),"IT":("Italia","UEFA","IT","ITA"),"DK":("Dinamarca","UEFA","DK","DEN"),"HR":("Croacia","UEFA","HR","CRO"),
+"AT":("Austria","UEFA","AT","AUT"),"GR":("Grecia","UEFA","GR","GRE"),"RU":("Rusia","UEFA","RU","RUS"),"SE":("Suecia","UEFA","SE","SWE"),
+"SI":("Eslovenia","UEFA","SI","SVN"),"TR":("Turquía","UEFA","TR","TUR"),"HU":("Hungría","UEFA","HU","HUN"),"IE":("Irlanda","UEFA","IE","IRL"),
+"UA":("Ucrania","UEFA","UA","UKR"),"SQ":("Escocia","UEFA","GB-SCT","SCO"),"EI":("Irlanda del Norte","UEFA","GB-NIR","NIR"),"KO":("Kosovo","UEFA","XK","KOS"),
+"BA":("Bosnia y Herzegovina","UEFA","BA","BIH"),"PL":("Polonia","UEFA","PL","POL"),"WA":("Gales","UEFA","GB-WLS","WAL"),"RS":("Serbia","UEFA","RS","SRB"),
+"SK":("Eslovaquia","UEFA","SK","SVK"),"AL":("Albania","UEFA","AL","ALB"),"CZ":("Chequia","UEFA","CZ","CZE"),"IL":("Israel","UEFA","IL","ISR"),
+"IS":("Islandia","UEFA","IS","ISL"),"GE":("Georgia","UEFA","GE","GEO"),"RO":("Rumania","UEFA","RO","ROU"),"ME":("Montenegro","UEFA","ME","MNE"),
+"BY":("Bielorrusia","UEFA","BY","BLR"),"FI":("Finlandia","UEFA","FI","FIN"),"NM":("Macedonia del Norte","UEFA","MK","MKD"),"EE":("Estonia","UEFA","EE","EST"),
+"FO":("Islas Feroe","UEFA","FO","FRO"),"BG":("Bulgaria","UEFA","BG","BUL"),"KZ":("Kazajistán","UEFA","KZ","KAZ"),"LU":("Luxemburgo","UEFA","LU","LUX"),
+"AM":("Armenia","UEFA","AM","ARM"),"AZ":("Azerbaiyán","UEFA","AZ","AZE"),"CY":("Chipre","UEFA","CY","CYP"),"MD":("Moldavia","UEFA","MD","MDA"),
+"LT":("Lituania","UEFA","LT","LTU"),"MT":("Malta","UEFA","MT","MLT"),"LV":("Letonia","UEFA","LV","LVA"),"AD":("Andorra","UEFA","AD","AND"),
+"GI":("Gibraltar","UEFA","GI","GIB"),"LI":("Liechtenstein","UEFA","LI","LIE"),"SM":("San Marino","UEFA","SM","SMR"),
+# CONMEBOL
+"AR":("Argentina","CONMEBOL","AR","ARG"),"CO":("Colombia","CONMEBOL","CO","COL"),"BR":("Brasil","CONMEBOL","BR","BRA"),"UY":("Uruguay","CONMEBOL","UY","URU"),
+"PY":("Paraguay","CONMEBOL","PY","PAR"),"EC":("Ecuador","CONMEBOL","EC","ECU"),"VE":("Venezuela","CONMEBOL","VE","VEN"),"CL":("Chile","CONMEBOL","CL","CHI"),
+"PE":("Perú","CONMEBOL","PE","PER"),"BO":("Bolivia","CONMEBOL","BO","BOL"),
+# CONCACAF
+"MX":("México","CONCACAF","MX","MEX"),"US":("Estados Unidos","CONCACAF","US","USA"),"CA":("Canadá","CONCACAF","CA","CAN"),"PA":("Panamá","CONCACAF","PA","PAN"),
+"CR":("Costa Rica","CONCACAF","CR","CRC"),"JM":("Jamaica","CONCACAF","JM","JAM"),"HT":("Haití","CONCACAF","HT","HAI"),"HN":("Honduras","CONCACAF","HN","HON"),
+"GT":("Guatemala","CONCACAF","GT","GUA"),"CW":("Curazao","CONCACAF","CW","CUW"),"SR":("Surinam","CONCACAF","SR","SUR"),"SV":("El Salvador","CONCACAF","SV","SLV"),
+"DO":("República Dominicana","CONCACAF","DO","DOM"),"TT":("Trinidad y Tobago","CONCACAF","TT","TRI"),"GY":("Guyana","CONCACAF","GY","GUY"),"MQ":("Martinica","CONCACAF","MQ","MTQ"),
+"CU":("Cuba","CONCACAF","CU","CUB"),"NI":("Nicaragua","CONCACAF","NI","NCA"),"GF":("Guayana Francesa","CONCACAF","GF","GUF"),"GP":("Guadalupe","CONCACAF","GP","GLP"),
+"VC":("San Vicente y las Granadinas","CONCACAF","VC","VIN"),"PR":("Puerto Rico","CONCACAF","PR","PUR"),"LC":("Santa Lucía","CONCACAF","LC","LCA"),
+"KN":("San Cristóbal y Nieves","CONCACAF","KN","SKN"),"MF":("San Martín","CONCACAF","MF","SMN"),"AW":("Aruba","CONCACAF","AW","ARU"),"MS":("Montserrat","CONCACAF","MS","MSR"),
+"GD":("Granada","CONCACAF","GD","GRN"),"BM":("Bermudas","CONCACAF","BM","BER"),"BZ":("Belice","CONCACAF","BZ","BLZ"),"BB":("Barbados","CONCACAF","BB","BRB"),
+"SX":("Sint Maarten","CONCACAF","SX","SMA"),"AG":("Antigua y Barbuda","CONCACAF","AG","ATG"),"DM":("Dominica","CONCACAF","DM","DMA"),"BQ":("Bonaire","CONCACAF","BQ","BOE"),
+"KY":("Islas Caimán","CONCACAF","KY","CAY"),"VI":("Islas Vírgenes de EE. UU.","CONCACAF","VI","VIR"),"TC":("Islas Turcas y Caicos","CONCACAF","TC","TCA"),
+"VG":("Islas Vírgenes Británicas","CONCACAF","VG","VGB"),"BS":("Bahamas","CONCACAF","BS","BAH"),"AI":("Anguila","CONCACAF","AI","AIA"),
+# CAF
+"MA":("Marruecos","CAF","MA","MAR"),"SN":("Senegal","CAF","SN","SEN"),"CI":("Costa de Marfil","CAF","CI","CIV"),"EG":("Egipto","CAF","EG","EGY"),
+"NG":("Nigeria","CAF","NG","NGA"),"DZ":("Argelia","CAF","DZ","ALG"),"CD":("RD del Congo","CAF","CD","COD"),"ML":("Malí","CAF","ML","MLI"),
+"CM":("Camerún","CAF","CM","CMR"),"ZA":("Sudáfrica","CAF","ZA","RSA"),"AO":("Angola","CAF","AO","ANG"),"BF":("Burkina Faso","CAF","BF","BFA"),
+"CV":("Cabo Verde","CAF","CV","CPV"),"GH":("Ghana","CAF","GH","GHA"),"TN":("Túnez","CAF","TN","TUN"),"GN":("Guinea","CAF","GN","GUI"),
+"GM":("Gambia","CAF","GM","GAM"),"BJ":("Benín","CAF","BJ","BEN"),"LY":("Libia","CAF","LY","LBY"),"UG":("Uganda","CAF","UG","UGA"),
+"TG":("Togo","CAF","TG","TOG"),"ZW":("Zimbabue","CAF","ZW","ZIM"),"GA":("Gabón","CAF","GA","GAB"),"ZM":("Zambia","CAF","ZM","ZAM"),
+"KM":("Comoras","CAF","KM","COM"),"GW":("Guinea-Bisáu","CAF","GW","GNB"),"MZ":("Mozambique","CAF","MZ","MOZ"),"NE":("Níger","CAF","NE","NIG"),
+"GQ":("Guinea Ecuatorial","CAF","GQ","EQG"),"RW":("Ruanda","CAF","RW","RWA"),"MG":("Madagascar","CAF","MG","MAD"),"KE":("Kenia","CAF","KE","KEN"),
+"RE":("Reunión","CAF","RE","REU"),"SD":("Sudán","CAF","SD","SDN"),"ZN":("Zanzíbar","CAF","TZ","ZAN"),"SL":("Sierra Leona","CAF","SL","SLE"),
+"LR":("Liberia","CAF","LR","LBR"),"BW":("Botsuana","CAF","BW","BOT"),"MR":("Mauritania","CAF","MR","MTN"),"BI":("Burundi","CAF","BI","BDI"),
+"NA":("Namibia","CAF","NA","NAM"),"TZ":("Tanzania","CAF","TZ","TAN"),"ET":("Etiopía","CAF","ET","ETH"),"MW":("Malaui","CAF","MW","MWI"),
+"YT":("Mayotte","CAF","YT","MYT"),"LS":("Lesoto","CAF","LS","LES"),"CG":("Congo","CAF","CG","CGO"),"ER":("Eritrea","CAF","ER","ERI"),
+"CF":("Rep. Centroafricana","CAF","CF","CTA"),"SW":("Esuatini","CAF","SZ","SWZ"),"SS":("Sudán del Sur","CAF","SS","SSD"),"TD":("Chad","CAF","TD","CHA"),
+"MU":("Mauricio","CAF","MU","MRI"),"ST":("Santo Tomé y Príncipe","CAF","ST","STP"),"SO":("Somalia","CAF","SO","SOM"),"DJ":("Yibuti","CAF","DJ","DJI"),
+"SC":("Seychelles","CAF","SC","SEY"),
+# AFC
+"JP":("Japón","AFC","JP","JPN"),"AU":("Australia","AFC","AU","AUS"),"IR":("Irán","AFC","IR","IRN"),"KR":("Corea del Sur","AFC","KR","KOR"),
+"UZ":("Uzbekistán","AFC","UZ","UZB"),"JO":("Jordania","AFC","JO","JOR"),"SA":("Arabia Saudita","AFC","SA","KSA"),"AE":("Emiratos Árabes","AFC","AE","UAE"),
+"IQ":("Irak","AFC","IQ","IRQ"),"PS":("Palestina","AFC","PS","PLE"),"QA":("Catar","AFC","QA","QAT"),"SY":("Siria","AFC","SY","SYR"),
+"OM":("Omán","AFC","OM","OMA"),"TH":("Tailandia","AFC","TH","THA"),"VN":("Vietnam","AFC","VN","VIE"),"KP":("Corea del Norte","AFC","KP","PRK"),
+"CN":("China","AFC","CN","CHN"),"KG":("Kirguistán","AFC","KG","KGZ"),"BH":("Baréin","AFC","BH","BHR"),"ID":("Indonesia","AFC","ID","IDN"),
+"MY":("Malasia","AFC","MY","MAS"),"KW":("Kuwait","AFC","KW","KUW"),"TJ":("Tayikistán","AFC","TJ","TJK"),"LB":("Líbano","AFC","LB","LBN"),
+"YE":("Yemen","AFC","YE","YEM"),"TM":("Turkmenistán","AFC","TM","TKM"),"IN":("India","AFC","IN","IND"),"SG":("Singapur","AFC","SG","SGP"),
+"PH":("Filipinas","AFC","PH","PHI"),"HK":("Hong Kong","AFC","HK","HKG"),"MM":("Myanmar","AFC","MM","MYA"),"AF":("Afganistán","AFC","AF","AFG"),
+"PK":("Pakistán","AFC","PK","PAK"),"BD":("Bangladés","AFC","BD","BAN"),"NP":("Nepal","AFC","NP","NEP"),"KH":("Camboya","AFC","KH","CAM"),
+"LK":("Sri Lanka","AFC","LK","SRI"),"TW":("Taiwán","AFC","TW","TPE"),"MV":("Maldivas","AFC","MV","MDV"),"LA":("Laos","AFC","LA","LAO"),
+"MN":("Mongolia","AFC","MN","MNG"),"TL":("Timor Oriental","AFC","TL","TLS"),"GU":("Guam","AFC","GU","GUM"),"BT":("Bután","AFC","BT","BHU"),
+"MO":("Macao","AFC","MO","MAC"),"BN":("Brunéi","AFC","BN","BRU"),"MP":("Islas Marianas del Norte","AFC","MP","NMI"),
+# OFC
+"NZ":("Nueva Zelanda","OFC","NZ","NZL"),"NC":("Nueva Caledonia","OFC","NC","NCL"),"VU":("Vanuatu","OFC","VU","VAN"),"TI":("Tahití","OFC","PF","TAH"),
+"FJ":("Fiyi","OFC","FJ","FIJ"),"PG":("Papúa Nueva Guinea","OFC","PG","PNG"),"SB":("Islas Salomón","OFC","SB","SOL"),"WS":("Samoa","OFC","WS","SAM"),
+"CK":("Islas Cook","OFC","CK","COK"),"TO":("Tonga","OFC","TO","TGA"),"AS":("Samoa Americana","OFC","AS","ASA"),"TV":("Tuvalu","OFC","TV","TUV"),
+"KI":("Kiribati","OFC","KI","KIR"),
+}
+# World.tsv (eloratings.net), consultado el 17 nov 2026
+ELO_RAW = """1, ES, 2258|2, EN, 2182|3, AR, 2157|4, FR, 2069|5, PT, 2005|6, BE, 1994|7, CO, 1992|8, BR, 1983|9, CH, 1976|10, DE, 1953|11, NL, 1952|12, NO, 1935|13, IT, 1925|14, MA, 1899|15, JP, 1898|16, DK, 1894|17, UY, 1869|18, HR, 1858|19, PY, 1856|20, EC, 1852|21, AT, 1838|22, MX, 1837|23, SN, 1812|24, US, 1804|25, GR, 1797|26, RU, 1796|27, SE, 1783|28, AU, 1773|29, CA, 1762|30, SI, 1751|31, TR, 1750|32, HU, 1746|33, IR, 1743|34, IE, 1728|35, KR, 1723|35, VE, 1723|37, UA, 1721|37, CL, 1721|39, CI, 1719|40, SQ, 1715|41, EG, 1703|42, NG, 1699|43, EI, 1698|44, PE, 1689|45, DZ, 1688|46, CD, 1675|46, KO, 1675|48, BA, 1672|49, PL, 1664|49, WA, 1664|51, PA, 1661|52, RS, 1653|53, SK, 1652|53, ML, 1652|55, AL, 1650|56, CZ, 1647|57, UZ, 1646|58, JO, 1644|59, SA, 1642|60, IL, 1640|61, IS, 1639|62, CM, 1636|63, BO, 1605|64, ZA, 1593|65, CR, 1584|65, GE, 1584|67, AE, 1577|68, JM, 1574|69, AO, 1568|70, RO, 1566|71, NZ, 1563|72, HT, 1552|73, BF, 1551|74, IQ, 1539|75, HN, 1530|76, ME, 1525|77, CV, 1521|78, BY, 1517|79, GH, 1515|79, FI, 1515|81, NM, 1502|82, GT, 1501|83, PS, 1493|84, TN, 1488|85, CW, 1484|86, GN, 1479|87, GM, 1473|88, SR, 1459|89, QA, 1455|89, BJ, 1455|91, SY, 1450|92, OM, 1447|93, EE, 1444|94, NS, 1442|95, LY, 1439|96, UG, 1437|97, KD, 1423|98, TG, 1422|98, FO, 1422|100, ZW, 1408|101, BG, 1401|102, GA, 1397|103, TH, 1394|104, ZM, 1382|105, KM, 1381|106, VN, 1378|106, GW, 1378|108, KZ, 1377|109, MZ, 1376|110, KP, 1375|111, NE, 1367|112, GQ, 1365|113, RW, 1364|114, CN, 1354|115, LU, 1352|116, MG, 1348|116, AM, 1348|118, KE, 1347|119, RE, 1345|120, AZ, 1340|121, GY, 1338|121, KG, 1338|123, BH, 1337|124, SV, 1333|124, SD, 1333|126, DO, 1331|127, ID, 1328|128, MY, 1327|129, TT, 1326|130, CY, 1321|130, ZN, 1321|132, SL, 1319|133, LR, 1315|134, BW, 1310|135, MR, 1307|136, KW, 1301|136, BI, 1301|138, MD, 1299|139, TJ, 1297|140, LB, 1296|141, NA, 1292|142, TZ, 1288|143, MQ, 1283|144, LT, 1282|145, ET, 1276|146, CU, 1263|146, NI, 1263|148, GF, 1258|149, GP, 1256|150, MW, 1255|151, MT, 1250|152, LV, 1241|153, VC, 1220|154, YT, 1217|155, YE, 1213|156, LS, 1211|157, TM, 1209|158, CG, 1203|159, ER, 1190|160, NC, 1186|160, CF, 1186|162, PR, 1157|163, IN, 1156|164, VU, 1153|165, TI, 1152|166, SW, 1148|167, SG, 1146|168, FJ, 1135|169, PH, 1130|170, LC, 1127|171, HK, 1114|172, PG, 1112|173, SB, 1110|174, SS, 1091|175, TD, 1073|176, KN, 1069|177, AD, 1067|178, MU, 1061|179, ST, 1037|180, GI, 1024|181, MF, 1021|182, AW, 1017|183, MS, 1016|184, MM, 1014|185, GD, 1010|186, JS, 1005|187, EH, 996|188, BM, 992|189, BZ, 990|190, BB, 982|191, SO, 973|192, AF, 961|193, SX, 947|194, GL, 945|195, PK, 944|196, DJ, 941|197, AG, 926|198, BD, 919|199, DM, 906|200, MC, 903|201, NP, 893|202, KH, 882|203, LI, 880|204, LK, 853|205, BQ, 842|206, TW, 817|206, SM, 817|208, SC, 812|209, HG, 782|210, KY, 765|210, MV, 765|212, TV, 756|213, EU, 737|214, WS, 728|215, LA, 725|215, MN, 725|215, BL, 725|218, TL, 713|219, GU, 705|220, WF, 699|221, VI, 694|222, VA, 692|223, AB, 691|224, TC, 687|225, PM, 677|226, VG, 661|227, CK, 647|228, BS, 631|229, BT, 630|230, TE, 628|231, AI, 612|232, MO, 588|233, CX, 578|234, FK, 571|235, FM, 564|236, MH, 559|237, BN, 552|238, KI, 544|239, TO, 520|240, NU, 496|241, MP, 432|242, CC, 422|243, PW, 402|244, AS, 369"""
+ELO_DATE = "2026-11-17"
+# Grupos reales del Mundial 2026 (SportRadar). Abreviaturas FIFA.
+WC2026 = {"A":["MEX","RSA","KOR","CZE"],"B":["SUI","CAN","BIH","QAT"],"C":["BRA","MAR","SCO","HAI"],"D":["USA","AUS","PAR","TUR"],
+ "E":["GER","CIV","ECU","CUW"],"F":["NED","JPN","SWE","TUN"],"G":["BEL","EGY","IRN","NZL"],"H":["ESP","CPV","URU","KSA"],
+ "I":["FRA","NOR","SEN","IRQ"],"J":["ARG","AUT","ALG","JOR"],"K":["COL","POR","COD","UZB"],"L":["ENG","CRO","GHA","PAN"]}
+# Colores para escudos/uniformes (principal, secundario) de selecciones conocidas; el resto usa los de su bandera aproximados por confederación.
+NCOL = {"ESP":("#C60B1E","#FFC400"),"ENG":("#FFFFFF","#CE1124"),"ARG":("#75AADB","#FFFFFF"),"FRA":("#002395","#FFFFFF"),"POR":("#DA291C","#006600"),
+ "BEL":("#E30613","#111111"),"COL":("#FCD116","#003893"),"BRA":("#FEDD00","#009739"),"SUI":("#D52B1E","#FFFFFF"),"GER":("#FFFFFF","#111111"),
+ "NED":("#F36C21","#FFFFFF"),"NOR":("#BA0C2F","#00205B"),"ITA":("#0066CC","#FFFFFF"),"MAR":("#C1272D","#006233"),"JPN":("#00205B","#FFFFFF"),
+ "DEN":("#C8102E","#FFFFFF"),"URU":("#7BAFD4","#111111"),"CRO":("#FF0000","#FFFFFF"),"PAR":("#D52B1E","#0038A8"),"ECU":("#FFD100","#034EA2"),
+ "AUT":("#ED2939","#FFFFFF"),"MEX":("#006847","#CE1126"),"SEN":("#FFFFFF","#00853F"),"USA":("#FFFFFF","#002868"),"GRE":("#0D5EAF","#FFFFFF"),
+ "SWE":("#FECC00","#006AA7"),"AUS":("#FFCD00","#00843D"),"CAN":("#D80621","#FFFFFF"),"TUR":("#E30A17","#FFFFFF"),"IRN":("#FFFFFF","#DA0000"),
+ "KOR":("#C60C30","#003478"),"CHI":("#D52B1E","#0039A6"),"VEN":("#7B1B26","#FFCC00"),"CIV":("#FF8200","#009A44"),"SCO":("#00205B","#FFFFFF"),
+ "EGY":("#CE1126","#FFFFFF"),"NGA":("#008751","#FFFFFF"),"PER":("#FFFFFF","#D91023"),"ALG":("#FFFFFF","#006233"),"COD":("#007FFF","#CE1021"),
+ "BIH":("#002395","#FECB00"),"POL":("#FFFFFF","#DC143C"),"WAL":("#C8102E","#00B140"),"PAN":("#DA121A","#072357"),"CZE":("#D7141A","#FFFFFF"),
+ "UZB":("#FFFFFF","#1EB53A"),"JOR":("#FFFFFF","#CE1126"),"KSA":("#FFFFFF","#006C35"),"RSA":("#FFB612","#007749"),"CRC":("#CE1126","#002B7F"),
+ "JAM":("#FED100","#009B3A"),"NZL":("#FFFFFF","#111111"),"HAI":("#00209F","#D21034"),"CPV":("#003893","#CF2027"),"GHA":("#FFFFFF","#111111"),
+ "TUN":("#E70013","#FFFFFF"),"QAT":("#8A1538","#FFFFFF"),"IRQ":("#FFFFFF","#007A3D"),"CUW":("#002B7F","#F9E814"),"HON":("#FFFFFF","#0073CF"),
+ "SRB":("#C6363C","#0C4076"),"UKR":("#FFD500","#005BBB"),"RUS":("#FFFFFF","#D52B1E"),"IRL":("#169B62","#FFFFFF"),"HUN":("#CD2A3E","#436F4D"),
+ "BOL":("#007934","#FFFFFF"),"CMR":("#007A5E","#CE1126"),"MLI":("#14B53A","#FCD116"),"ISL":("#02529C","#FFFFFF"),"SVN":("#FFFFFF","#005DA4")}
+CONF_COL = {"UEFA":("#1F4E9E","#FFFFFF"),"CONMEBOL":("#F2C230","#1F3A93"),"CONCACAF":("#C8102E","#FFFFFF"),"CAF":("#1B8A3A","#F4C430"),"AFC":("#D62828","#FFFFFF"),"OFC":("#0E7C86","#FFFFFF")}
+
+def build_nations():
+    teams = []
+    for chunk in ELO_RAW.split("|"):
+        rk, code, elo = [x.strip() for x in chunk.split(",")]
+        if code not in NAT: continue  # se excluyen selecciones que no pertenecen a una confederación
+        n, conf, iso, ab = NAT[code]
+        c = NCOL.get(ab, CONF_COL[conf])
+        teams.append({"n": n, "ab": ab, "code": code, "iso": iso, "conf": conf, "elo": int(elo), "c": list(c)})
+    teams.sort(key=lambda t: -t["elo"])
+    for i, t in enumerate(teams): t["pos"] = i + 1
+    return {"nat": {"name": "Selecciones", "country": "Mundo", "src": "World Football Elo Ratings (eloratings.net)", "elo_date": ELO_DATE, "teams": teams},
+            "wc2026": WC2026}

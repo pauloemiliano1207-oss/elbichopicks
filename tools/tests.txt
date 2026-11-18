@@ -1,0 +1,73 @@
+"""Pruebas matemáticas del motor de El Bicho Picks. Ejecutar: python3 tests.py"""
+import json, math, random, subprocess, os, sys, shutil, tempfile
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from model import probs, rate, geo_norm
+
+ok = fail = 0
+def check(name, cond):
+    global ok, fail
+    if cond: ok += 1
+    else: fail += 1; print("FALLA:", name)
+
+L = {"h": 1.5, "a": 1.2}
+T = lambda x, y, **k: dict(x=x, y=y, **k)
+random.seed(1)
+# 1) las probabilidades 1X2 suman 1 y están en [0,1]
+for _ in range(200):
+    H, A = T(random.uniform(.4, 2.5), random.uniform(.4, 2.5)), T(random.uniform(.4, 2.5), random.uniform(.4, 2.5))
+    p = probs(L, H, A)
+    check("suma 1X2 = 1", abs(sum(p) - 1) < 1e-9 and all(0 <= v <= 1 for v in p))
+# 2) simetría: en cancha neutral, invertir equipos invierte local/visitante
+LN = {"h": 1.35, "a": 1.35}
+for _ in range(50):
+    H, A = T(random.uniform(.5, 2), random.uniform(.5, 2)), T(random.uniform(.5, 2), random.uniform(.5, 2))
+    p, q = probs(LN, H, A, neutral=True), probs(LN, A, H, neutral=True)
+    check("simetría neutral", abs(p[0] - q[2]) < 1e-9 and abs(p[1] - q[1]) < 1e-9)
+# 3) monotonía: más ataque del local => más probabilidad de que gane
+base = probs(L, T(1, 1), T(1, 1))[0]
+check("monotonía ataque", probs(L, T(1.2, 1), T(1, 1))[0] > base)
+check("monotonía defensa", probs(L, T(1, .8), T(1, 1))[0] > base)
+# 4) ventaja de local: equipos iguales => gana más el local
+p = probs(L, T(1, 1), T(1, 1)); check("ventaja local", p[0] > p[2])
+# 5) Elo -> goles: reproduce la curva de resultado esperado de Elo (error < 0.02 hasta 400 puntos)
+g, mu = 0.00434, math.log(1.3)
+for dr in range(0, 401, 50):
+    lh, la = math.exp(mu + g * dr / 2), math.exp(mu - g * dr / 2)
+    pH, pD, pA = probs({"h": lh, "a": la}, T(1, 1), T(1, 1), neutral=True)
+    we = 1 / (10 ** (-dr / 400) + 1)
+    check(f"Elo dr={dr}", abs(pH + .5 * pD - we) < 0.02)
+# 6) redondeo a 100% (residuo mayor) siempre suma exactamente 100
+def round100(ps, dec=0):
+    f = 10 ** dec; tot = 100 * f; raw = [p * tot for p in ps]; fl = [math.floor(r) for r in raw]; rest = tot - sum(fl)
+    for _, i in sorted(((r - fl[i], i) for i, r in enumerate(raw)), reverse=True):
+        if rest > 0: fl[i] += 1; rest -= 1
+    return [v / f for v in fl]
+for _ in range(300):
+    a, b = random.random(), random.random(); a, b = min(a, b), max(a, b); ps = [a, b - a, 1 - b]
+    for dec in (0, 1): check("redondeo 100", abs(sum(round100(ps, dec)) - 100) < 1e-9)
+# 7) métricas: un pronóstico perfecto tiene Brier 0 y RPS 0
+y = [1, 0, 0]; p = [1, 0, 0]
+check("Brier perfecto", sum((a - b) ** 2 for a, b in zip(p, y)) == 0)
+c1, c2 = p[0] - y[0], p[0] + p[1] - y[0] - y[1]; check("RPS perfecto", (c1 * c1 + c2 * c2) / 2 == 0)
+# 8) niveles normalizados: media geométrica = 1
+rows = [("A", "AAA", 5, 2, 1, (1.3, .8)), ("B", "BBB", 3, 3, 2, (1.0, 1.0)), ("C", "CCC", 1, 2, 5, (.8, 1.3))]
+st = {"A": dict(gf=14, ga=6, hp=4, hgf=8, hga=2, ap=4, agf=6, aga=4, form="GGEGP"), "B": dict(gf=10, ga=10, hp=4, hgf=5, hga=5, ap=4, agf=5, aga=5, form="EGPEG"), "C": dict(gf=6, ga=14, hp=4, hgf=3, hga=7, ap=4, agf=3, aga=7, form="PPEPG")}
+teams, _, _ = rate(rows, st)
+check("media geométrica ataque = 1", abs(math.prod(t["x"] for t in teams) ** (1 / 3) - 1) < 0.01)
+check("orden de fuerza", teams[0]["x"] > teams[2]["x"] and teams[0]["y"] < teams[2]["y"])
+# 9) los pronósticos registrados no se alteran al reconstruir los datos
+d = json.load(open(os.path.join(os.path.dirname(__file__), "data.json"), encoding="utf-8"))
+tmp = tempfile.mkdtemp(); prev = os.path.join(tmp, "prev.json")
+if d.get("track"):
+    d["track"][0]["p"] = [0.111, 0.222, 0.667]; key = d["track"][0]["k"]
+    json.dump(d, open(prev, "w"), ensure_ascii=False)
+    here = os.path.dirname(os.path.abspath(__file__)); work = os.path.join(tmp, "w"); shutil.copytree(here, work, ignore=shutil.ignore_patterns("*.png"))
+    env = dict(os.environ, PREV_DATA=prev)
+    subprocess.run([sys.executable, "build_data.py"], cwd=work, env=env, capture_output=True)
+    nd = json.load(open(os.path.join(work, "data.json"), encoding="utf-8"))
+    e = next((x for x in nd["track"] if x["k"] == key), None)
+    check("pronóstico histórico inmutable", e is not None and e["p"] == [0.111, 0.222, 0.667])
+    check("se conservan todos los registros", len(nd["track"]) >= len(d["track"]))
+shutil.rmtree(tmp, ignore_errors=True)
+print(f"{ok} pruebas correctas, {fail} fallidas")
+sys.exit(1 if fail else 0)

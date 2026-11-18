@@ -1,0 +1,129 @@
+"""El Bicho Picks · partidos de hoy con todos los mercados.
+Uso: python3 bicho_build_today.py <snapshot_cuotas.json> <salida_today.json>
+Fútbol: Poisson + Dixon-Coles (rho -0.1) ajustado para reproducir 1X2 y el total de Pinnacle (sin margen).
+  Primer tiempo: 44.5% de los goles (medido en 12,673 partidos europeos 2021-2026).
+NBA/NFL: margen ~ Normal(mu, sd) con mu sacada del moneyline de Pinnacle; total ~ Normal(línea Pinnacle, sd).
+  sd NBA: margen 13, total 18.5; NFL: margen 13.5, total 13.5 (supuestos típicos, aún sin validar con históricos propios)."""
+import json,sys,math
+from statistics import NormalDist
+ND=NormalDist()
+SN={'soccer_epl':'Premier League','soccer_spain_la_liga':'LaLiga','soccer_italy_serie_a':'Serie A','soccer_germany_bundesliga':'Bundesliga','soccer_france_ligue_one':'Ligue 1','soccer_mexico_ligamx':'Liga MX','soccer_uefa_champs_league':'Champions League','basketball_nba':'NBA','americanfootball_nfl':'NFL'}
+EX={'betfair_ex_eu','matchbook','betfair_ex_uk','pinnacle'}
+ES={'Draw':'Empate'}
+def pois(l,k):return math.exp(-l)*l**k/math.factorial(k)
+def mat(lh,la,rho=-0.1,G=11):
+    M=[[pois(lh,i)*pois(la,j) for j in range(G)] for i in range(G)]
+    M[0][0]*=1-lh*la*rho;M[0][1]*=1+lh*rho;M[1][0]*=1+la*rho;M[1][1]*=1-rho
+    s=sum(map(sum,M));return [[x/s for x in r] for r in M]
+def P(M,f):return sum(M[i][j] for i in range(len(M)) for j in range(len(M)) if f(i,j))
+def fit(pH,pA,line,pOver):
+    best=None
+    for a in range(5,45):
+        for b in range(2,45):
+            lh,la=a/10*0.98,b/10*0.98
+            M=mat(lh,la);e=(P(M,lambda i,j:i>j)-pH)**2+(P(M,lambda i,j:i<j)-pA)**2
+            if line is not None:e+=(P(M,lambda i,j:i+j>line)-pOver)**2
+            if best is None or e<best[0]:best=(e,lh,la)
+    _,lh,la=best
+    for _ in range(3):  # refinamiento local
+        for d in(0.04,0.02,0.01):
+            for dh,da in((d,0),(-d,0),(0,d),(0,-d)):
+                M=mat(lh+dh,la+da);e=(P(M,lambda i,j:i>j)-pH)**2+(P(M,lambda i,j:i<j)-pA)**2+((P(M,lambda i,j:i+j>line)-pOver)**2 if line is not None else 0)
+                if e<best[0]:best=(e,lh+dh,la+da);lh,la=lh+dh,la+da
+    return lh,la
+def nv(prices):
+    inv=[1/x for x in prices];s=sum(inv);return [x/s for x in inv]
+def best_price(g,mk,name,point=None):
+    b=None
+    for bk in g['bookmakers']:
+        if bk['key'] in EX:continue
+        for m in bk['markets']:
+            if m['key']!=mk:continue
+            for o in m['outcomes']:
+                if o['name']==name and (point is None or o.get('point')==point) and (b is None or o['price']>b[0]):b=(o['price'],bk['key'])
+    return b
+def mk(fam,lab,p,odd=None):
+    d=dict(fam=fam,k=lab,p=round(p,4),fair=round(1/p,2) if p>0 else None)
+    if odd:d.update(odd=odd[0],book=odd[1],ev=round(p*odd[0]-1,4))
+    return d
+snap=json.load(open(sys.argv[1]));taken=snap['taken'];out=[]
+EXTRA=json.load(open(sys.argv[3])) if len(sys.argv)>3 else []
+for x in EXTRA:
+    if x['t']<=taken:continue
+    snap['data'].setdefault('_extra',[]).append(dict(id=x['id'],commence_time=x['t'],home_team=x['h'],away_team=x['a'],bookmakers=[],_own=x))
+for sk,games in snap['data'].items():
+    if not isinstance(games,list):continue
+    for g in games:
+        if g['commence_time']<=taken:continue
+        own=g.get('_own')
+        pin=next((b for b in g['bookmakers'] if b['key']=='pinnacle'),None)
+        if not pin and not own:continue
+        H,A=g['home_team'],g['away_team']
+        if own:
+            ev=dict(id=g['id'],sp='fut',lg=own['lg'],t=g['commence_time'],h=H,a=A,m=[],own=True,note=own.get('note'))
+            lh,la=own['lh'],own['la'];M=mat(lh,la);pH,pD,pA=P(M,lambda i,j:i>j),P(M,lambda i,j:i==j),P(M,lambda i,j:i<j);line=None;tot=None
+        else:
+            h2h=next((m for m in pin['markets'] if m['key']=='h2h'),None);tot=next((m for m in pin['markets'] if m['key']=='totals'),None)
+            if not h2h:continue
+            pr={o['name']:o['price'] for o in h2h['outcomes']}
+            ev=dict(id=g['id'],sp='fut' if sk.startswith('soccer') else 'nba' if 'basketball' in sk else 'nfl',lg=SN[sk],t=g['commence_time'],h=H,a=A,m=[])
+        line=pO=None
+        if tot and not own:
+            ov=next(o for o in tot['outcomes'] if o['name']=='Over');un=next(o for o in tot['outcomes'] if o['name']=='Under');line=ov['point'];pO=nv([ov['price'],un['price']])[0]
+        if ev['sp']=='fut':
+            if not own:
+                if 'Draw' not in pr:continue
+                pH,pD,pA=nv([pr[H],pr['Draw'],pr[A]]);lh,la=fit(pH,pA,line,pO);M=mat(lh,la)
+            G=len(M)
+            ev.update(xg=[round(lh,2),round(la,2)],line=line)
+            f=lambda c:P(M,c)
+            m=ev['m']
+            m+= [mk('res','Gana '+H,pH,best_price(g,'h2h',H)),mk('res','Empate',pD,best_price(g,'h2h','Draw')),mk('res','Gana '+A,pA,best_price(g,'h2h',A)),
+                 mk('dc',H+' o empate',pH+pD),mk('dc',A+' o empate',pA+pD),mk('dc','Gana cualquiera (no empate)',pH+pA),
+                 mk('dnb',H+' (empate devuelve)',pH/(pH+pA)),mk('dnb',A+' (empate devuelve)',pA/(pH+pA)),
+                 mk('hc',H+' −1.5',f(lambda i,j:i-j>=2)),mk('hc',A+' +1.5',f(lambda i,j:j-i>=-1)),mk('hc',A+' −1.5',f(lambda i,j:j-i>=2)),mk('hc',H+' +1.5',f(lambda i,j:i-j>=-1))]
+            for L in(0.5,1.5,2.5,3.5,4.5):
+                po=f(lambda i,j:i+j>L)
+                oo=best_price(g,'totals','Over',L) if L==line else None;uu=best_price(g,'totals','Under',L) if L==line else None
+                if L<4.5:m.append(mk('tot',f'Más de {L} goles',po,oo))
+                if L>0.5:m.append(mk('tot',f'Menos de {L} goles',1-po,uu))
+            m+= [mk('btts','Ambos anotan: sí',f(lambda i,j:i>0 and j>0)),mk('btts','Ambos anotan: no',f(lambda i,j:i==0 or j==0)),
+                 mk('team',H+' anota',1-sum(M[0])),mk('team',H+' mete 2 o más',f(lambda i,j:i>=2)),mk('team',A+' anota',1-sum(M[i][0] for i in range(G))),mk('team',A+' mete 2 o más',f(lambda i,j:j>=2))]
+            l1=(lh+la)*0.445;p1=[pois(l1,k) for k in range(12)]
+            m+= [mk('1t','Gol en el 1er tiempo',1-p1[0]),mk('1t','Más de 1.5 goles en el 1er tiempo',1-p1[0]-p1[1]),mk('1t','1er tiempo sin goles',p1[0])]
+            sc=sorted(((M[i][j],f'{i}-{j}') for i in range(6) for j in range(6)),reverse=True)[:3]
+            ev['scores']=[[s,round(p,3)] for p,s in sc]
+        else:
+            sd,sdt=(13,18.5) if ev['sp']=='nba' else (13.5,13.5)
+            pH,pA=nv([pr[H],pr[A]]);mu=sd*ND.inv_cdf(pH);ev.update(margin=round(mu,1),line=line)
+            m=ev['m'];m+=[mk('res','Gana '+H,pH,best_price(g,'h2h',H)),mk('res','Gana '+A,pA,best_price(g,'h2h',A))]
+            fav,dog,mf=(H,A,mu) if mu>=0 else (A,H,-mu)
+            for x in(1.5,3.5,5.5,7.5,9.5,12.5):
+                p=1-ND.cdf((x-mf)/sd)
+                if 0.25<p<0.92:m.append(mk('hc',f'{fav} −{x}',p))
+                q=ND.cdf((x+mf)/sd)
+                if 0.25<q<0.92 and x>=3.5:m.append(mk('hc',f'{dog} +{x}',q))
+            if line is not None:
+                for d in(-9,-6,-3,0,3,6,9):
+                    L=line+d;po=1-ND.cdf(d/sdt)
+                    oo=best_price(g,'totals','Over',L) if d==0 else None;uu=best_price(g,'totals','Under',L) if d==0 else None
+                    if d<=0:m.append(mk('tot',f'Más de {L} puntos',po if d else pO,oo))
+                    if d>=0:m.append(mk('tot',f'Menos de {L} puntos',(1-po) if d else 1-pO,uu))
+        # top 3: probabilidad entre 0.55 y 0.90, una por familia, sin mercados triviales
+        cand=sorted([x for x in ev['m'] if 0.55<=x['p']<=0.90 and x['fam']!='dnb'],key=lambda x:-x['p'])
+        top=[];fams=set()
+        for x in cand:
+            if x['fam'] in fams:continue
+            top.append(x);fams.add(x['fam'])
+            if len(top)==3:break
+        ev['top']=top
+        r=[x for x in ev['m'] if x['fam']=='res'];fv=max(r,key=lambda x:x['p'])
+        ev['fav']=fv;ev['tight']=fv['p']<0.5
+        # jugada clave: si el resultado está apretado, la de mayor probabilidad en otra familia (0.58-0.85)
+        alt=[x for x in ev['m'] if 0.58<=x['p']<=0.85 and x['fam'] in('tot','btts','team','dc','hc','1t')]
+        ev['key']=fv if not ev['tight'] and fv['p']<=0.85 else (max(alt,key=lambda x:x['p']) if alt else fv)
+        ev['nb']=len(g['bookmakers'])
+        out.append(ev)
+out.sort(key=lambda e:e['t'])
+json.dump(dict(taken=taken,src='Cuotas: Pinnacle sin margen y mejores precios de 25 casas (The Odds API, región EU). Modelo: Poisson/Dixon-Coles en fútbol y normal en NBA/NFL.',events=out),open(sys.argv[2],'w'),ensure_ascii=False)
+print(len(out),'partidos')

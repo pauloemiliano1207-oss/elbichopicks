@@ -1,0 +1,91 @@
+"""Modelo de fútbol de El Bicho Picks (usado por build_data.py y por las pruebas).
+Nivel de cada equipo = mezcla de (a) nivel base de la temporada pasada y (b) goles de esta temporada,
+con ajuste de local/visitante y de forma reciente (últimos 5 partidos)."""
+import math
+
+def load_stats(path):
+    S, lg = {}, None
+    for ln in open(path, encoding='utf-8'):
+        ln = ln.strip()
+        if not ln or ln.startswith('#'): continue
+        if ln.startswith('['): lg = ln[1:-1]; S[lg] = {}; continue
+        n, g, h, a, f = ln.split('|')
+        gf, ga = map(int, g.split()); hp, hgf, hga = map(int, h.split()); ap, agf, aga = map(int, a.split())
+        S[lg][n] = dict(gf=gf, ga=ga, hp=hp, hgf=hgf, hga=hga, ap=ap, agf=agf, aga=aga, form=f)
+    return S
+
+def geo_norm(v):
+    g = math.exp(sum(math.log(x) for x in v) / len(v)); return [x / g for x in v]
+
+FORM_PTS = {'G': 3, 'E': 1, 'P': 0}
+
+def rate(rows, stats, P=(0.90, 1.25), opt=None):
+    """rows: [(nombre, abrev, G, E, P, (ataque_base, defensa_base)), ...]; stats: {nombre: {...}}"""
+    o = dict(prior_k=8, comp=0.85, ha=True, form=0.05, ha_k=4, ha_pow=0.5)
+    if opt: o.update(opt)
+    pa = geo_norm([r[-1][0] for r in rows]); pd = geo_norm([r[-1][1] for r in rows])
+    st = [stats.get(r[0]) for r in rows]
+    H = sum(s['hgf'] for s in st if s); Hp = sum(s['hp'] for s in st if s)
+    A = sum(s['agf'] for s in st if s); Ap = sum(s['ap'] for s in st if s)
+    Lh, La = H / max(1, Hp), A / max(1, Ap); avg = (Lh + La) / 2
+    out = []
+    for i, r in enumerate(rows):
+        s = st[i]; gp = r[2] + r[3] + r[4]
+        a0 = math.log(pa[i]) * o['comp']; d0 = math.log(pd[i]) * o['comp']
+        t = dict(n=r[0], ab=r[1], w=r[2], d=r[3], l=r[4], pts=3 * r[2] + r[3], gp=gp)
+        if s and gp > 0:
+            K = 3
+            ac = math.log((s['gf'] + avg * K) / ((gp + K) * avg)); dc = math.log((s['ga'] + avg * K) / ((gp + K) * avg))
+            w = gp / (gp + o['prior_k'])
+            a = (1 - w) * a0 + w * ac; d = (1 - w) * d0 + w * dc
+            # forma reciente: últimos 5, el más reciente pesa más
+            if o['form'] and s['form']:
+                f = s['form'][-5:]; ws = range(1, len(f) + 1)
+                fppg = sum(FORM_PTS[c] * k for c, k in zip(f, ws)) / sum(ws); sppg = (3 * r[2] + r[3]) / gp
+                z = max(-1.5, min(1.5, fppg - sppg)); a += o['form'] * z; d -= o['form'] * z
+                t['fppg'] = round(fppg, 2)
+            # local / visitante
+            hx = hy = ax = ay = 1.0
+            if o['ha']:
+                k = o['ha_k']
+                gen_a = (s['gf'] + avg * k) / ((gp + k) * avg); gen_d = (s['ga'] + avg * k) / ((gp + k) * avg)
+                h_a = (s['hgf'] + Lh * k) / ((s['hp'] + k) * Lh); h_d = (s['hga'] + La * k) / ((s['hp'] + k) * La)
+                a_a = (s['agf'] + La * k) / ((s['ap'] + k) * La); a_d = (s['aga'] + Lh * k) / ((s['ap'] + k) * Lh)
+                cl = lambda v: max(0.75, min(1.33, v)) ** o['ha_pow']
+                hx, hy, ax, ay = cl(h_a / gen_a), cl(h_d / gen_d), cl(a_a / gen_a), cl(a_d / gen_d)
+            t.update(gf=s['gf'], ga=s['ga'], hx=round(hx, 3), hy=round(hy, 3), ax=round(ax, 3), ay=round(ay, 3), form_s=s['form'])
+            t['form'] = round((ac - dc) - (a0 - d0), 2)
+        else:
+            a, d = a0, d0; t['form'] = 0.0
+        t['_a'], t['_d'] = a, d
+        out.append(t)
+    xs = geo_norm([math.exp(t['_a']) for t in out]); ys = geo_norm([math.exp(t['_d']) for t in out])
+    for t, x, y in zip(out, xs, ys):
+        t['x'], t['y'] = round(x, 3), round(y, 3); del t['_a'], t['_d']
+    return out, Lh, La
+
+def pois(l, k): return math.exp(-l) * l ** k / math.factorial(k)
+
+def probs(L, H, A, rho=-0.1, neutral=False):
+    hx = 1 if neutral else H.get('hx', 1); hy = 1 if neutral else H.get('hy', 1)
+    ax = 1 if neutral else A.get('ax', 1); ay = 1 if neutral else A.get('ay', 1)
+    lh = L['h'] * H['x'] * hx * A['y'] * ay * (1 if neutral else H.get('alt', 1))
+    la = L['a'] * A['x'] * ax * H['y'] * hy
+    M = {}
+    for m, w in ((.86, .25), (1, .5), (1.14, .25)):
+        x, y = lh * m, la * m
+        for i in range(11):
+            for j in range(11):
+                tau = 1
+                if i == 0 and j == 0: tau = 1 - x * y * rho
+                elif i == 0 and j == 1: tau = 1 + x * rho
+                elif i == 1 and j == 0: tau = 1 + y * rho
+                elif i == 1 and j == 1: tau = 1 - rho
+                M[(i, j)] = M.get((i, j), 0) + w * max(0, tau) * pois(x, i) * pois(y, j)
+    s = sum(M.values()); pH = pD = pA = 0
+    for (i, j), v in M.items():
+        v /= s
+        if i > j: pH += v
+        elif i == j: pD += v
+        else: pA += v
+    return pH, pD, pA

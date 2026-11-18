@@ -1,0 +1,47 @@
+"""El Bicho Picks · actualización diaria en la nube (sin la computadora del usuario).
+Uso: python3 bicho_daily.py <ODDS_API_KEY> <APIFY_TOKEN> <carpeta_trabajo>
+En la carpeta deben estar bicho_build_odds.py, bicho_build_today.py y bicho_senales.json.
+Genera: odds.json, today.json, lineups.json y actualiza bicho_senales.json."""
+import json,sys,os,urllib.request,urllib.parse,datetime as dt,subprocess,glob
+K,T,W=sys.argv[1:4];os.chdir(W)
+def get(url,timeout=60):
+    with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'bicho/1.0'}),timeout=timeout) as r:
+        return json.loads(r.read().decode()),dict(r.headers)
+log={}
+# A) cuotas (16 créditos)
+SP={'soccer_epl':'h2h,totals','soccer_spain_la_liga':'h2h,totals','soccer_italy_serie_a':'h2h,totals','soccer_germany_bundesliga':'h2h,totals','soccer_mexico_ligamx':'h2h,totals','basketball_nba':'h2h,totals','americanfootball_nfl':'h2h,totals','soccer_france_ligue_one':'h2h','soccer_uefa_champs_league':'h2h'}
+try:
+    j,h=get(f'https://api.the-odds-api.com/v4/sports?apiKey={K}');rem=int(h.get('x-requests-remaining',h.get('X-Requests-Remaining','999')))
+    log['creditos_antes']=rem
+    if rem<30:raise RuntimeError(f'Quedan {rem} créditos de The Odds API: no se actualizan cuotas.')
+    snap={'taken':dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00','Z'),'data':{}}
+    for s,mk in SP.items():
+        d,h=get(f'https://api.the-odds-api.com/v4/sports/{s}/odds?apiKey={K}&regions=eu&markets={mk}&oddsFormat=decimal');snap['data'][s]=d
+        log['creditos_restantes']=h.get('x-requests-remaining',h.get('X-Requests-Remaining'))
+    os.makedirs('snaps',exist_ok=True);fn=f"snaps/bicho_cuotas_{snap['taken'][:13].replace(':','-').replace('T','-')}.json";json.dump(snap,open(fn,'w'))
+    subprocess.run([sys.executable,'bicho_build_odds.py','snaps','bicho_senales.json','odds.json'],check=True)
+    subprocess.run([sys.executable,'bicho_build_today.py',fn,'today.json'],check=True)
+    log['cuotas']='ok'
+except Exception as e:log['cuotas']=f'error: {e}'
+# B) alineaciones (365Scores vía Apify)
+try:
+    def q(p,**o):
+        o.update(langId='1',timezone='America/Mexico_City',token=T);return get('https://superapis--365scores.apify.actor'+p+'?'+urllib.parse.urlencode(o),90)[0]
+    comps={7:'Premier League',11:'LaLiga',17:'Serie A',25:'Bundesliga',35:'Ligue 1',141:'Liga MX',572:'Champions League'}
+    now=dt.datetime.now(dt.timezone.utc);lim=now+dt.timedelta(days=4);out={'taken':now.isoformat().replace('+00:00','Z'),'src':'365Scores vía Apify','games':[]};n=0
+    for cid,cn in comps.items():
+        f=q('/v1/competition/fixtures',competitionId=cid);n+=1
+        for g in f.get('games',[]):
+            t=dt.datetime.fromisoformat(g['startTime'])
+            if t<now or t>lim or not g.get('hasLineups'):continue
+            G=q('/v1/match/lineups',matchId=str(g['id'])).get('game');n+=1
+            if not G:continue
+            def side(c):
+                L=c.get('lineups') or {'members':[]};rk=[m['ranking'] for m in L['members'] if m.get('statusText')=='Starting' and m.get('ranking')]
+                return {'n':c['name'],'st':L.get('status'),'fm':L.get('formation'),'miss':sum(m.get('statusText')=='Missing' for m in L['members']),'doubt':sum(m.get('statusText')=='Doubtful' for m in L['members']),'xi':round(sum(rk)/len(rk),2) if rk else None}
+            out['games'].append({'lg':cn,'id':G['id'],'t':G['startTime'],'h':side(G['homeCompetitor']),'a':side(G['awayCompetitor'])})
+    json.dump(out,open('lineups.json','w'),ensure_ascii=False);log['alineaciones']=f"ok ({len(out['games'])} partidos, {n} consultas)"
+except Exception as e:log['alineaciones']=f'error: {e}'
+for f in('odds.json','today.json','lineups.json'):
+    if os.path.exists(f):assert K not in open(f).read() and T not in open(f).read(),'¡clave filtrada!'
+print(json.dumps(log,ensure_ascii=False))
