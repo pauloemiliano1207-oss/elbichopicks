@@ -55,6 +55,14 @@ try:
             out['games'].append({'lg':cn,'id':G['id'],'t':G['startTime'],'h':side(G['homeCompetitor']),'a':side(G['awayCompetitor'])})
     json.dump(out,open('lineups.json','w'),ensure_ascii=False);log['alineaciones']=f"ok ({len(out['games'])} partidos, {n} consultas)"
 except Exception as e:log['alineaciones']=f'error: {e}'
-for f in('odds.json','today.json','lineups.json'):
+# C) historial de jugadas clave (inmutable)
+try:
+    import importlib.util;spec=importlib.util.spec_from_file_location('bp',os.path.join(W,'bicho_picks.py'));bp=importlib.util.module_from_spec(spec);spec.loader.exec_module(bp)
+    P=json.load(open('picks.json')) if os.path.exists('picks.json') else {'picks':[]}
+    r=bp.resolve(P,K) if log.get('cuotas')=='ok' else {'resueltos':0}
+    nlog=bp.log_picks(json.load(open('today.json')),P) if os.path.exists('today.json') else 0
+    json.dump(P,open('picks.json','w'),ensure_ascii=False);log['historial']=f"{nlog} jugadas nuevas, {r.get('resueltos',0)} calificadas ({r.get('creditos',0)} créditos)"
+except Exception as e:log['historial']=f'error: {e}'
+for f in('odds.json','today.json','lineups.json','picks.json'):
     if os.path.exists(f):assert K not in open(f).read() and T not in open(f).read(),'¡clave filtrada!'
 print(json.dumps(log,ensure_ascii=False))

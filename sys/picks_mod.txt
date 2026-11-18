@@ -1,0 +1,71 @@
+"""El Bicho Picks · historial inmutable de jugadas clave y su resultado.
+log_picks: guarda la jugada clave y el top 3 de cada partido que empieza en las próximas 36 h (una sola vez, antes del partido).
+resolve: califica con el marcador final de The Odds API (/scores, 2 créditos por deporte con daysFrom=3)."""
+import json,re,datetime as dt,urllib.request
+SK={'Premier League':'soccer_epl','LaLiga':'soccer_spain_la_liga','Serie A':'soccer_italy_serie_a','Bundesliga':'soccer_germany_bundesliga','Ligue 1':'soccer_france_ligue_one','Liga MX':'soccer_mexico_ligamx','Champions League':'soccer_uefa_champs_league','NBA':'basketball_nba','NFL':'americanfootball_nfl'}
+def _now():return dt.datetime.now(dt.timezone.utc)
+def _iso(t):return dt.datetime.fromisoformat(t.replace('Z','+00:00'))
+def log_picks(today,P,hours=36):
+    seen={p['id'] for p in P['picks']};now=_now();n=0
+    for e in today['events']:
+        if e.get('pending') or e.get('own') or e['id'] in seen or e['lg'] not in SK:continue
+        t=_iso(e['t'])
+        if not(now<t<now+dt.timedelta(hours=hours)):continue
+        mini=lambda x:{'k':x['k'],'fam':x['fam'],'p':x['p'],'fair':x['fair'],'odd':x.get('odd'),'book':x.get('book')}
+        P['picks'].append({'id':e['id'],'sk':SK[e['lg']],'sp':e['sp'],'lg':e['lg'],'t':e['t'],'h':e['h'],'a':e['a'],'made':now.isoformat().replace('+00:00','Z'),'key':mini(e['key']),'top':[mini(x) for x in e['top']],'res':None})
+        n+=1
+    return n
+def grade(m,h,a,hs,as_,sp):
+    """Devuelve 'win','loss','push' o None si no se puede calificar (p. ej. primer tiempo)."""
+    k=m['k'];tot=hs+as_
+    W=lambda c:'win' if c else 'loss'
+    if m['fam']=='1t':return None
+    if k=='Empate':return W(hs==as_)
+    if k=='Gana cualquiera (no empate)':return W(hs!=as_)
+    if k.startswith('Gana '):
+        team=k[5:];return W(hs>as_) if team==h else W(as_>hs) if team==a else None
+    mo=re.match(r'^(.*) o empate$',k)
+    if mo:return W(hs>=as_) if mo.group(1)==h else W(as_>=hs) if mo.group(1)==a else None
+    mo=re.match(r'^(.*) \(empate devuelve\)$',k)
+    if mo:
+        if hs==as_:return 'push'
+        return W(hs>as_) if mo.group(1)==h else W(as_>hs)
+    mo=re.match(r'^(Más|Menos) de ([\d.]+) (goles|puntos)',k)
+    if mo:
+        L=float(mo.group(2))
+        if tot==L:return 'push'
+        return W(tot>L) if mo.group(1)=='Más' else W(tot<L)
+    if k=='Ambos anotan: sí':return W(hs>0 and as_>0)
+    if k=='Ambos anotan: no':return W(hs==0 or as_==0)
+    mo=re.match(r'^(.*) (anota|mete 2 o más)$',k)
+    if mo:
+        g=hs if mo.group(1)==h else as_ if mo.group(1)==a else None
+        if g is None:return None
+        return W(g>=1) if mo.group(2)=='anota' else W(g>=2)
+    mo=re.match(r'^(.*) ([−+-])([\d.]+)$',k)
+    if mo:
+        team,sg,x=mo.group(1),mo.group(2),float(mo.group(3));d=(hs-as_) if team==h else (as_-hs) if team==a else None
+        if d is None:return None
+        v=d-x if sg in'−-' else d+x
+        return 'push' if v==0 else W(v>0)
+    return None
+def resolve(P,K,force=False):
+    now=_now();due=[p for p in P['picks'] if p['res'] is None and _iso(p['t'])<now-dt.timedelta(hours=3)]
+    if not due:return {'resueltos':0,'creditos':0}
+    # ahorro: calificamos cada 2 días, salvo que haya pendientes de más de 48 h
+    old=any(_iso(p['t'])<now-dt.timedelta(hours=48) for p in due)
+    if not(force or old or now.timetuple().tm_yday%2==0):return {'resueltos':0,'creditos':0,'nota':'se califica mañana'}
+    sks=sorted({p['sk'] for p in due});scores={};n=0
+    for sk in sks:
+        with urllib.request.urlopen(f'https://api.the-odds-api.com/v4/sports/{sk}/scores?apiKey={K}&daysFrom=3',timeout=60) as r:
+            for g in json.loads(r.read().decode()):
+                if g.get('completed') and g.get('scores'):
+                    sc={s['name']:int(float(s['score'])) for s in g['scores']};scores[g['id']]=(sc.get(g['home_team']),sc.get(g['away_team']))
+    for p in due:
+        if p['id'] in scores and None not in scores[p['id']]:
+            hs,as_=scores[p['id']];p['res']={'hs':hs,'as':as_}
+            p['key']['g']=grade(p['key'],p['h'],p['a'],hs,as_,p['sp'])
+            for x in p['top']:x['g']=grade(x,p['h'],p['a'],hs,as_,p['sp'])
+            n+=1
+        elif _iso(p['t'])<now-dt.timedelta(days=4):p['res']={'void':True}  # partido sin marcador (pospuesto/cancelado)
+    return {'resueltos':n,'creditos':2*len(sks)}

@@ -110,6 +110,7 @@ function renderParlay(){const el=$('parBox');if(!el)return;loadToday(()=>{
   el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{PAR.splice(+b.dataset.rm,1);renderParlay();});
 });}
 function initHoy(){
+  renderJK();
   if($('fichaClose'))$('fichaClose').onclick=()=>$('fichaModal').classList.remove('on');
   if($('fichaModal'))$('fichaModal').addEventListener('click',e=>{if(e.target.id==='fichaModal')$('fichaModal').classList.remove('on');});
   loadToday(()=>{if(!TD.events.some(e=>inDay(e,0)&&!e.pending)){HDAY=7;PDAY=7;}renderHoy();if(!PAR.length)genParlay();});
@@ -134,3 +135,24 @@ DATOS: ${JSON.stringify(data)}`;
   try{const r=await SAMPLE(prompt,{onText:({text})=>{box.innerHTML=md(text);},cache:false});box.innerHTML=md(r.text);}
   catch(err){box.innerHTML=err&&err.code==='rate_limited'?'El análisis está ocupado; intenta en un momento.':'El análisis experto no está disponible en esta vista.';}
   btn.disabled=false;btn.textContent='🧠 Análisis experto de este partido';}
+
+/* ---------- Historial de jugadas clave ---------- */
+let JK=null,JKN=15;
+function renderJK(){const el=$('jkBox');if(!el)return;
+  if(!JK){fetch('sys/picks.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{JK=j;renderJK();}).catch(()=>{el.innerHTML='';});return;}
+  const P=JK.picks.slice().sort((a,b)=>a.t<b.t?1:-1),done=P.filter(p=>p.res&&!p.res.void&&(p.key.g==='win'||p.key.g==='loss'));
+  const st=xs=>{const w=xs.filter(p=>p.key.g==='win').length,n=xs.length;return{n,w,acc:n?w/n:0,exp:n?xs.reduce((a,p)=>a+p.key.p,0)/n:0};};
+  const all=st(done),bySp=['fut','nba','nfl'].map(s=>[s,st(done.filter(p=>p.sp===s))]).filter(([,x])=>x.n),byR=[['Riesgo bajo (75%+)',.75,1.01],['Riesgo medio (60–75%)',.6,.75],['Riesgo alto (<60%)',0,.6]].map(([l,lo,hi])=>[l,st(done.filter(p=>p.key.p>=lo&&p.key.p<hi))]).filter(([,x])=>x.n);
+  const pend=P.filter(p=>!p.res).length;
+  const row=([l,x])=>`<tr><td>${l}</td><td class="n num">${x.n}</td><td class="n num"><b>${pct(x.acc,0)}</b></td><td class="n num">${pct(x.exp,0)}</td></tr>`;
+  const since=P.length?dlab(P[P.length-1].made):'';
+  el.innerHTML=`<h3 class="t" style="margin-top:0">📒 Historial de jugadas clave</h3>
+  <p class="note" style="margin-top:4px">Cada mañana guardamos la jugada clave de cada partido <b>antes</b> de que empiece, y después la calificamos con el marcador final. Nada se borra ni se edita${since?` · desde el ${since}`:''}.</p>
+  ${all.n?`<div class="psum" style="grid-template-columns:repeat(3,1fr)"><div><span>Calificadas</span><b>${all.n}</b><span class="fn">${pend} pendientes</span></div><div><span>Acertamos</span><b class="big">${pct(all.acc,0)}</b><span class="fn">${all.w} de ${all.n}</span></div><div><span>Lo que esperábamos</span><b>${pct(all.exp,0)}</b><span class="fn">probabilidad promedio</span></div></div>
+  <p class="note">Si "Acertamos" y "Lo que esperábamos" se parecen, las probabilidades están bien calibradas. Con pocos partidos la diferencia todavía es mucho azar.</p>
+  <div style="overflow-x:auto"><table class="ftab"><thead><tr><th>Grupo</th><th class="n">Jugadas</th><th class="n">Acierto real</th><th class="n">Esperado</th></tr></thead><tbody>${bySp.map(([s,x])=>row([SPN[s],x])).join('')}${byR.map(row).join('')}</tbody></table></div>`
+  :`<p class="note">${P.length} jugadas guardadas, esperando resultado. Los primeros resultados aparecen en 1–2 días.</p>`}
+  <div style="margin-top:12px">${P.slice(0,JKN).map(p=>{const g=p.key.g,lab=!p.res?'<span class="rk mid">Pendiente</span>':p.res.void?'<span class="rk mid">Anulado</span>':g==='win'?'<span class="rk good">✓ Acierto</span>':g==='loss'?'<span class="rk hi">✗ Fallo</span>':g==='push'?'<span class="rk mid">Devuelta</span>':'<span class="rk mid">Sin calificar</span>';
+    return`<div class="leg"><div><div class="kk" style="font-size:14px">${esc(p.key.k)} · ${p0(p.key.p)}</div><div class="fn">${esc(p.h)} ${p.res&&!p.res.void?`<b>${p.res.hs}-${p.res.as}</b>`:'vs'} ${esc(p.a)} · ${esc(p.lg)} · ${dlab(p.t)}</div></div>${lab}<span></span></div>`;}).join('')}</div>
+  ${P.length>JKN?`<div style="text-align:center;margin-top:10px"><button class="btn sm" id="jkMore">Ver más (${P.length-JKN})</button></div>`:''}`;
+  if($('jkMore'))$('jkMore').onclick=()=>{JKN+=30;renderJK();};}
