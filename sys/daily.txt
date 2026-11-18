@@ -20,7 +20,7 @@ try:
         log['creditos_restantes']=h.get('x-requests-remaining',h.get('X-Requests-Remaining'))
     os.makedirs('snaps',exist_ok=True);fn=f"snaps/bicho_cuotas_{snap['taken'][:13].replace(':','-').replace('T','-')}.json";json.dump(snap,open(fn,'w'))
     subprocess.run([sys.executable,'bicho_build_odds.py','snaps','bicho_senales.json','odds.json'],check=True)
-    subprocess.run([sys.executable,'bicho_build_today.py',fn,'today.json'],check=True)
+    subprocess.run([sys.executable,'bicho_build_today.py',fn,'today.json']+(['extra.json'] if os.path.exists('extra.json') else []),check=True)
     log['cuotas']='ok'
 except Exception as e:log['cuotas']=f'error: {e}'
 # B) alineaciones (365Scores vía Apify)

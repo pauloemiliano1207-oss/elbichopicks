@@ -119,7 +119,7 @@ function renderUpcoming(){
     S.H={lg,i:idx(g.h),ctx:{},adj:0};S.A={lg,i:idx(g.a),ctx:{},adj:0};$('neutral').checked=false;FIXTURE=g;renderPicker();runSim(true);});
 }
 document.querySelectorAll('#sports button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('#sports button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#sports button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('#sportsM button').forEach(x=>x.classList.toggle('on',x.dataset.sm===b.dataset.s));
   SPORT=b.dataset.s;INTL=false;FIXTURE=null;if(SPORT!=='nat')$('neutral').checked=false;const lg=curLeague();S.H={lg,i:0,ctx:{},adj:0};S.A={lg,i:1,ctx:{},adj:0};
   featured();renderPicker();runSim(false);if(INTRO)renderPotd();
 });
@@ -417,7 +417,7 @@ $('csvGo').onclick=()=>{
     x:(v.gf+avg*K)/((v.gp+K)*avg),y:(v.ga+avg*K)/((v.gp+K)*avg),form:0})).sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga));
   teams.forEach((t,i)=>t.pos=i+1);DATA.fut.mis={name:'Mis datos',country:'CSV',h:gh/n,a:ga/n,coef:.9,src:'tus resultados',teams};
   $('csvMsg').textContent=`Listo: ${n} partidos, ${teams.length} equipos.`;
-  if(SPORT!=='fut'){SPORT='fut';document.querySelectorAll('#sports button').forEach(x=>x.classList.toggle('on',x.dataset.s==='fut'));}
+  if(SPORT!=='fut'){SPORT='fut';document.querySelectorAll('#sports button').forEach(x=>x.classList.toggle('on',x.dataset.s==='fut'));document.querySelectorAll('#sportsM button').forEach(x=>x.classList.toggle('on',x.dataset.sm==='fut'));}
   LEAGUE='mis';INTL=false;S.H={lg:'mis',i:0,ctx:{},adj:0};S.A={lg:'mis',i:1,ctx:{},adj:0};FIXTURE=null;renderPicker();renderUpcoming();
   document.getElementById('choose').scrollIntoView();
 };
@@ -615,3 +615,8 @@ fetch('data.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
   <li><b>Pruebas:</b> 868 pruebas matemáticas automáticas sin fallas. Validación con 70 partidos reales fuera de muestra (ver Récord).</li></ul></details>`;
   setupHooks();liveMount($('cv'));featured();renderPicker();runSim(false);renderPotd();renderTrust();renderEval();renderRankings();renderTourney();renderOdds();renderLineups();if(typeof initHoy==='function')initHoy();renderPlans();initCaps();reveal();
 }).catch(e=>{console.error(e);$('boot').textContent='No se pudieron cargar los datos. Recarga la página.';});
+
+document.querySelectorAll('#sportsM button').forEach(b=>b.onclick=()=>{const t=document.querySelector('#sports button[data-s="'+b.dataset.sm+'"]');if(t)t.click();});
+
+/* Móvil: secciones técnicas plegadas */
+[['howCard','📊 Ver cómo se calculó'],['evalBox','📈 Ver métricas y pruebas del modelo']].forEach(([id,l])=>{const e=document.getElementById(id);if(!e)return;e.classList.add('mcol');const b=document.createElement('button');b.className='mtog';b.textContent=l;b.onclick=()=>{const o=e.classList.toggle('mopen');b.textContent=o?'Ocultar':l;};e.parentNode.insertBefore(b,e);});

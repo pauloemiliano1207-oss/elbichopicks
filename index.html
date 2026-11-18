@@ -449,6 +449,33 @@ footer img{height:36px}
 @media(max-width:560px){.psum{grid-template-columns:1fr}}
 .pwarn{margin-top:12px;font-size:13px;color:var(--t2);background:rgba(255,122,0,.07);border:1px solid rgba(255,122,0,.25);border-radius:12px;padding:10px}
 .advx{margin:40px 0;border:1px solid var(--line2);border-radius:18px;padding:6px 18px;background:#101010}.advx summary{cursor:pointer;padding:14px 0;font:800 16px Montserrat,sans-serif;list-style:none}.advx summary span{font:500 13px Montserrat,sans-serif;color:var(--t3);margin-left:8px}.advx[open] summary{border-bottom:1px solid var(--line2);margin-bottom:10px}
+
+/* ===== MÓVIL ===== */
+.sportsM{display:none}
+@media(max-width:700px){
+  header .sports{display:none}
+  .sportsM{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 14px}
+  .sportsM::-webkit-scrollbar{display:none}
+  .sportsM button{flex:1;min-width:max-content;border:1px solid var(--line2);background:#141414;color:var(--t2);font:800 12px Montserrat,sans-serif;padding:10px 12px;border-radius:999px;letter-spacing:.04em}
+  .sportsM button.on{background:var(--menta);color:#0B0B0B;border-color:var(--menta)}
+  .ftab{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  table{max-width:100%}
+  .rec{grid-template-columns:52px 1fr 78px;gap:8px;font-size:12px}
+  .sec h2{font-size:26px}.sec .sub{display:none}
+  .card{padding:14px}
+  .hbar{gap:8px}.seg button{padding:8px 11px;font-size:12px}
+  .hb{grid-template-columns:78px 1fr 36px}
+  .mbox{padding:14px;border-radius:16px}.modal{padding:2vh 8px}
+  .fhd h3{font-size:19px}
+  .top3{flex-wrap:wrap}.top3 .tp{flex-direction:row;align-items:center;gap:8px}
+  .ftk td.pb .hbt{width:50px}
+  .scs{flex-direction:column}
+  .leg{grid-template-columns:1fr auto auto;gap:8px}
+  .advx{margin:24px 0;padding:4px 12px}
+  .champ{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:700px){.mcol:not(.mopen){display:none}.mtog{display:block!important}}
+.mtog{display:none;width:100%;margin:10px 0;background:#141414;border:1px solid var(--line2);color:var(--t2);font:800 13px Montserrat,sans-serif;padding:12px;border-radius:14px}
 </style>
 </head>
 <body>
@@ -525,6 +552,7 @@ footer img{height:36px}
 <div class="ctaw" style="gap:10px"><button class="cta" id="shareRes" style="padding:13px 22px;font-size:14px">📸 Crear tarjeta para redes</button><button class="ghost" onclick="document.getElementById('analysis').scrollIntoView()">Ver análisis completo ↓</button></div>
 
 <!-- ===== ELEGIR PARTIDO ===== -->
+<div class="sportsM" id="sportsM"><button data-sm="fut" class="on">⚽ Clubes</button><button data-sm="nat">🌎 Selecciones</button><button data-sm="nba">🏀 NBA</button><button data-sm="nfl">🏈 NFL</button></div>
 <div class="sec" id="choose"><span class="kick">Elige tu partido</span><h2>Próximos <em>partidos</em></h2><span class="sub">Toca uno y lo simulamos 50,000 veces</span></div>
 <div class="up" id="upcoming"></div>
 <div class="sec" style="margin-top:28px"><h2 style="font-size:20px">O arma tu <em>propio partido</em></h2></div>

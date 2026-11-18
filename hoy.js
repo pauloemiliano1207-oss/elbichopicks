@@ -36,7 +36,7 @@ function renderHoy(){const el=$('hoyBox');if(!el)return;loadToday(()=>{
 });}
 function cardHTML(e){
   const r=e.m.filter(x=>x.fam==='res'),k=e.key,[rk,rc]=riskOf(k.p);
-  const bars=r.map(x=>{const lab=x.k==='Empate'?'Empate':x.k.replace('Gana ','');return`<div class="hb"><span class="hbl">${esc(short2(lab))}</span><span class="hbt"><i style="width:${Math.round(x.p*100)}%" class="${x===e.fav?'f':''}"></i></span><b>${p0(x.p)}</b></div>`;}).join('');
+  const bars=r.map(x=>{const lab=x.k==='Empate'?'Empate':x.k.replace('Gana ','');return`<div class="hb"><span class="hbl">${esc(short2(lab))}</span><span class="hbt"><i style="width:${Math.round(x.p*100)}%" class="${x.k===e.fav.k?'f':''}"></i></span><b>${p0(x.p)}</b></div>`;}).join('');
   const tightNote=e.tight?`<div class="tight">⚖️ Resultado apretado: mejor mira otra jugada</div>`:'';
   return`<div class="hcard"><div class="hct"><span class="hlg">${esc(e.lg)}</span><span class="htm">${HDAY===0?'':dlab(e.t)+' · '}${e.own?'<span class="rk mid" style="margin-right:6px">Modelo propio</span>':''}${hhmm(e.t)}</span></div>
     <div class="hteams"><b>${esc(e.h)}</b><span>vs</span><b>${esc(e.a)}</b></div>
@@ -110,7 +110,7 @@ function renderParlay(){const el=$('parBox');if(!el)return;loadToday(()=>{
 function initHoy(){
   if($('fichaClose'))$('fichaClose').onclick=()=>$('fichaModal').classList.remove('on');
   if($('fichaModal'))$('fichaModal').addEventListener('click',e=>{if(e.target.id==='fichaModal')$('fichaModal').classList.remove('on');});
-  renderHoy();loadToday(()=>{if(!PAR.length)genParlay();});
+  loadToday(()=>{if(!TD.events.some(e=>inDay(e,0))){HDAY=7;PDAY=7;}renderHoy();if(!PAR.length)genParlay();});
 }
 
 /* Análisis experto: reglas tomadas de los prompts de análisis del usuario (fútbol y NFL), limitado a los datos que tiene la página. */
