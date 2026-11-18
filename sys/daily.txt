@@ -14,10 +14,23 @@ try:
     j,h=get(f'https://api.the-odds-api.com/v4/sports?apiKey={K}');rem=int(h.get('x-requests-remaining',h.get('X-Requests-Remaining','999')))
     log['creditos_antes']=rem
     if rem<30:raise RuntimeError(f'Quedan {rem} créditos de The Odds API: no se actualizan cuotas.')
-    snap={'taken':dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00','Z'),'data':{}}
+    now=dt.datetime.now(dt.timezone.utc)
+    snap={'taken':now.isoformat().replace('+00:00','Z'),'data':{},'events':{},'skipped':[]}
     for s,mk in SP.items():
+        ev,_=get(f'https://api.the-odds-api.com/v4/sports/{s}/events?apiKey={K}')  # gratis: no gasta créditos
+        snap['events'][s]=ev
+        ts=[dt.datetime.fromisoformat(e['commence_time'].replace('Z','+00:00')) for e in ev]
+        hz=48 if s.startswith(('basketball','americanfootball')) else 72
+        if not any(now<t<now+dt.timedelta(hours=hz) for t in ts):snap['skipped'].append(s);continue  # sin partidos cerca: no gastamos créditos
         d,h=get(f'https://api.the-odds-api.com/v4/sports/{s}/odds?apiKey={K}&regions=eu&markets={mk}&oddsFormat=decimal');snap['data'][s]=d
         log['creditos_restantes']=h.get('x-requests-remaining',h.get('X-Requests-Remaining'))
+    # ligas sin consulta hoy: reutilizamos las cuotas guardadas del día anterior si existen
+    prev=sorted(glob.glob('snaps/bicho_cuotas_*.json'))
+    if prev:
+        P=json.load(open(prev[-1]))
+        for s in snap['skipped']:
+            if s in P.get('data',{}):snap['data'][s]=[g for g in P['data'][s] if g['commence_time']>snap['taken']]
+    log['ligas_sin_consulta']=snap['skipped']
     os.makedirs('snaps',exist_ok=True);fn=f"snaps/bicho_cuotas_{snap['taken'][:13].replace(':','-').replace('T','-')}.json";json.dump(snap,open(fn,'w'))
     subprocess.run([sys.executable,'bicho_build_odds.py','snaps','bicho_senales.json','odds.json'],check=True)
     subprocess.run([sys.executable,'bicho_build_today.py',fn,'today.json']+(['extra.json'] if os.path.exists('extra.json') else []),check=True)

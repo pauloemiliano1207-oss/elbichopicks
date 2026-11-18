@@ -1,6 +1,6 @@
 /* ============ HOY + PARLAYS (El Bicho Picks) ============
    Datos: today.json (cuotas reales + modelo). Todo en español y pensado para leerse rápido. */
-let TD=null,HSP='all',HDAY=0,HLG='Todas',PAR=[],PMODE='eq',PDAY=0,PSP='all',PN=3;
+let TD=null,HMAX=24,HSP='all',HDAY=0,HLG='Todas',PAR=[],PMODE='eq',PDAY=0,PSP='all',PN=3;
 const SPN={fut:'Fútbol',nba:'NBA',nfl:'NFL'};
 const FAMN={res:'Resultado',dc:'Doble oportunidad',dnb:'Empate no apuesta',hc:'Hándicap',tot:'Goles / puntos',btts:'Ambos anotan',team:'Goles por equipo','1t':'Primer tiempo'};
 const BKN=k=>(typeof BOOKN!=='undefined'&&BOOKN[k])||k;
@@ -25,16 +25,18 @@ function renderHoy(){const el=$('hoyBox');if(!el)return;loadToday(()=>{
     <div class="seg">${days.map(([l,d])=>`<button class="${HDAY===d?'on':''}" data-hd="${d}">${l}</button>`).join('')}</div>
     ${lgs.length>2?`<select id="hLg" class="hsel">${lgs.map(l=>`<option ${l===HLG?'selected':''}>${esc(l)}</option>`).join('')}</select>`:''}
   </div>
-  <p class="hsub">${list.length?`${list.length} partido${list.length>1?'s':''}. En cada uno te mostramos la <b>jugada clave</b>: lo más probable que vale la pena mirar. Toca <b>Ver todo</b> para ver todos los números.`:'No hay partidos en este filtro. Prueba con “Esta semana”.'}</p>
-  <div class="hgrid">${list.slice(0,60).map(cardHTML).join('')}</div>
+  <p class="hsub">${list.length?`${list.length} partido${list.length>1?'s':''}${list.some(e=>e.pending)?` (${list.filter(e=>e.pending).length} todavía sin cuotas)`:''}. En cada uno te mostramos la <b>jugada clave</b>: lo más probable que vale la pena mirar. Toca <b>Ver todo</b> para ver todos los números.`:'No hay partidos con estos filtros. Prueba con “Esta semana”.'}</p>
+  <div class="hgrid">${list.slice(0,HMAX).map(cardHTML).join('')}</div>${list.length>HMAX?`<div style="text-align:center;margin:16px 0"><button class="btn" id="hMore">Ver más partidos (${list.length-HMAX})</button></div>`:''}
   <p class="note">Probabilidades calculadas con las cuotas de Pinnacle (la casa más precisa) sin su comisión, más nuestro modelo para mercados derivados. Datos del ${new Date(TD.taken).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'})}. Ninguna jugada es segura.</p>`;
-  el.querySelectorAll('[data-hs]').forEach(b=>b.onclick=()=>{HSP=b.dataset.hs;renderHoy();});
-  el.querySelectorAll('[data-hd]').forEach(b=>b.onclick=()=>{HDAY=+b.dataset.hd;renderHoy();});
+  if($('hMore'))$('hMore').onclick=()=>{HMAX+=24;renderHoy();};
+  el.querySelectorAll('[data-hs]').forEach(b=>b.onclick=()=>{HSP=b.dataset.hs;HMAX=24;renderHoy();});
+  el.querySelectorAll('[data-hd]').forEach(b=>b.onclick=()=>{HDAY=+b.dataset.hd;HMAX=24;renderHoy();});
   if($('hLg'))$('hLg').onchange=e=>{HLG=e.target.value;renderHoy();};
   el.querySelectorAll('[data-fi]').forEach(b=>b.onclick=()=>openFicha(b.dataset.fi));
   el.querySelectorAll('[data-padd]').forEach(b=>b.onclick=()=>{const e=TD.events.find(x=>x.id===b.dataset.padd);addLeg(e,e.key);});
 });}
 function cardHTML(e){
+  if(e.pending)return`<div class="hcard pend"><div class="hct"><span class="hlg">${esc(e.lg)}</span><span class="htm">${HDAY===0?'':dlab(e.t)+' · '}${hhmm(e.t)}</span></div><div class="hteams"><b>${esc(e.h)}</b><span>vs</span><b>${esc(e.a)}</b></div><div class="note" style="margin:0">⏳ Las casas aún no publican cuotas de este partido. Se actualiza solo cada mañana a las 6:00.</div></div>`;
   const r=e.m.filter(x=>x.fam==='res'),k=e.key,[rk,rc]=riskOf(k.p);
   const bars=r.map(x=>{const lab=x.k==='Empate'?'Empate':x.k.replace('Gana ','');return`<div class="hb"><span class="hbl">${esc(short2(lab))}</span><span class="hbt"><i style="width:${Math.round(x.p*100)}%" class="${x.k===e.fav.k?'f':''}"></i></span><b>${p0(x.p)}</b></div>`;}).join('');
   const tightNote=e.tight?`<div class="tight">⚖️ Resultado apretado: mejor mira otra jugada</div>`:'';
@@ -110,7 +112,7 @@ function renderParlay(){const el=$('parBox');if(!el)return;loadToday(()=>{
 function initHoy(){
   if($('fichaClose'))$('fichaClose').onclick=()=>$('fichaModal').classList.remove('on');
   if($('fichaModal'))$('fichaModal').addEventListener('click',e=>{if(e.target.id==='fichaModal')$('fichaModal').classList.remove('on');});
-  loadToday(()=>{if(!TD.events.some(e=>inDay(e,0))){HDAY=7;PDAY=7;}renderHoy();if(!PAR.length)genParlay();});
+  loadToday(()=>{if(!TD.events.some(e=>inDay(e,0)&&!e.pending)){HDAY=7;PDAY=7;}renderHoy();if(!PAR.length)genParlay();});
 }
 
 /* Análisis experto: reglas tomadas de los prompts de análisis del usuario (fútbol y NFL), limitado a los datos que tiene la página. */

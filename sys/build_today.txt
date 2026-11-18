@@ -124,6 +124,18 @@ for sk,games in snap['data'].items():
         ev['key']=fv if not ev['tight'] and fv['p']<=0.85 else (max(alt,key=lambda x:x['p']) if alt else fv)
         ev['nb']=len(g['bookmakers'])
         out.append(ev)
+# ligas que hoy no se consultaron (para ahorrar créditos): conservamos sus partidos de la versión anterior
+import os
+seen={e['id'] for e in out}
+if os.path.exists('prev_today.json'):
+    for e in json.load(open('prev_today.json')).get('events',[]):
+        if e['id'] in seen or e['t']<=taken or e.get('pending') or e.get('own'):continue
+        out.append(e);seen.add(e['id'])
+# partidos sin cuotas publicadas todavía (lista gratuita de eventos)
+for sk,evs in snap.get('events',{}).items():
+    for g in evs:
+        if g['id'] in seen or g['commence_time']<=taken:continue
+        out.append(dict(id=g['id'],sp='fut' if sk.startswith('soccer') else 'nba' if 'basketball' in sk else 'nfl',lg=SN.get(sk,sk),t=g['commence_time'],h=g['home_team'],a=g['away_team'],m=[],top=[],pending=True))
 out.sort(key=lambda e:e['t'])
 json.dump(dict(taken=taken,src='Cuotas: Pinnacle sin margen y mejores precios de 25 casas (The Odds API, región EU). Modelo: Poisson/Dixon-Coles en fútbol y normal en NBA/NFL.',events=out),open(sys.argv[2],'w'),ensure_ascii=False)
 print(len(out),'partidos')
