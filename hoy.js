@@ -137,9 +137,9 @@ DATOS: ${JSON.stringify(data)}`;
   btn.disabled=false;btn.textContent='🧠 Análisis experto de este partido';}
 
 /* ---------- Historial de jugadas clave ---------- */
-let JK=null,JKN=15,RP=null;
+let JK=null,JKN=15,RP=null,RPN=null;
 function renderJK(){const el=$('jkBox');if(!el)return;
-  if(!JK){Promise.all([fetch('sys/picks.json',{cache:'no-store'}).then(r=>r.json()),fetch('backtest.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]).then(([j,b])=>{JK=j;RP=b.replay||null;renderJK();}).catch(()=>{el.innerHTML='';});return;}
+  if(!JK){Promise.all([fetch('sys/picks.json',{cache:'no-store'}).then(r=>r.json()),fetch('backtest.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]).then(([j,b])=>{JK=j;RP=b.replay||null;RPN=b.replay_nfl||null;renderJK();}).catch(()=>{el.innerHTML='';});return;}
   const P=JK.picks.slice().sort((a,b)=>a.t<b.t?1:-1),done=P.filter(p=>p.res&&!p.res.void&&(p.key.g==='win'||p.key.g==='loss'));
   const st=xs=>{const w=xs.filter(p=>p.key.g==='win').length,n=xs.length;return{n,w,acc:n?w/n:0,exp:n?xs.reduce((a,p)=>a+p.key.p,0)/n:0};};
   const all=st(done),bySp=['fut','nba','nfl'].map(s=>[s,st(done.filter(p=>p.sp===s))]).filter(([,x])=>x.n),byR=[['Riesgo bajo (75%+)',.75,1.01],['Riesgo medio (60–75%)',.6,.75],['Riesgo alto (<60%)',0,.6]].map(([l,lo,hi])=>[l,st(done.filter(p=>p.key.p>=lo&&p.key.p<hi))]).filter(([,x])=>x.n);
@@ -153,10 +153,13 @@ function renderJK(){const el=$('jkBox');if(!el)return;
   <div style="overflow-x:auto"><table class="ftab"><thead><tr><th>Grupo</th><th class="n">Jugadas</th><th class="n">Acierto real</th><th class="n">Esperado</th></tr></thead><tbody>${bySp.map(([s,x])=>row([SPN[s],x])).join('')}${byR.map(row).join('')}</tbody></table></div>`
   :`<p class="note">${P.length} jugadas guardadas, esperando resultado. Los primeros resultados aparecen en 1–2 días.</p>`}
   ${RP?(()=>{const k=RP.jugada_clave,f=RP.favorito_1x2,t=RP.top1,pl=RP.parlays_seguros_3,rr=RP.por_riesgo;return`<div class="hkey" style="margin:14px 0">
-    <span class="lab">Prueba con ${fmt(RP.partidos)} partidos pasados</span>
+    <span class="lab">⚽ Fútbol · prueba con ${fmt(RP.partidos)} partidos pasados</span>
     <p style="margin:6px 0 10px;font-size:13px;color:var(--t2)">Simulamos con el sistema actual los últimos ${fmt(RP.partidos)} partidos reales de 8 ligas (${dlab(RP.desde+'T12:00')} a ${dlab(RP.hasta+'T12:00')}) y los comparamos con el marcador final.</p>
     <div class="psum" style="grid-template-columns:repeat(3,1fr);margin-top:0"><div><span>Jugada clave</span><b class="big">${pct(k.acc,0)}</b><span class="fn">${fmt(k.w)} de ${fmt(k.n)} · esperado ${pct(k.exp,0)}</span></div><div><span>Jugada más segura (top 1)</span><b>${pct(t.acc,0)}</b><span class="fn">esperado ${pct(t.exp,0)}</span></div><div><span>Solo el ganador (1X2)</span><b>${pct(f.acc,0)}</b><span class="fn">esperado ${pct(f.exp,0)}</span></div></div>
     <p class="note" style="margin-bottom:0">Riesgo bajo: acertó ${pct(rr['bajo (75%+)'].acc,0)} · riesgo medio: ${pct(rr['medio (60-75%)'].acc,0)} · parlays “seguros” de 3: ${pct(pl.acc,0)}. Ninguna jugada es segura y acertar no garantiza ganancias. Juega con responsabilidad · +18.</p></div>`;})():''}
+  ${RPN?(()=>{const k=RPN.jugada_clave,t=RPN.top1,f=RPN.favorito;return`<div class="hkey" style="margin:14px 0;border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.07)"><span class="lab" style="color:var(--azul)">🏈 NFL · prueba con ${fmt(k.n)} partidos (temporadas 2021–2026)</span>
+    <div class="psum" style="grid-template-columns:repeat(3,1fr)"><div><span>Jugada clave</span><b class="big" style="color:var(--azul)">${pct(k.acc,0)}</b><span class="fn">${fmt(k.w)} de ${fmt(k.n)}</span></div><div><span>Jugada más segura</span><b>${pct(t.acc,0)}</b><span class="fn">top 1</span></div><div><span>Solo el ganador</span><b>${pct(f.acc,0)}</b><span class="fn">moneyline</span></div></div>
+    <p class="note" style="margin-bottom:0">Acierto estable temporada tras temporada (entre ${pct(Math.min(...Object.values(RPN.por_temporada).map(x=>x.acc)),0)} y ${pct(Math.max(...Object.values(RPN.por_temporada).map(x=>x.acc)),0)}). Datos públicos de nflverse con líneas de cierre.</p></div>`;})():''}
   <div style="margin-top:12px">${P.slice(0,JKN).map(p=>{const g=p.key.g,lab=!p.res?'<span class="rk mid">Pendiente</span>':p.res.void?'<span class="rk mid">Anulado</span>':g==='win'?'<span class="rk good">✓ Acierto</span>':g==='loss'?'<span class="rk hi">✗ Fallo</span>':g==='push'?'<span class="rk mid">Devuelta</span>':'<span class="rk mid">Sin calificar</span>';
     return`<div class="leg"><div><div class="kk" style="font-size:14px">${esc(p.key.k)} · ${p0(p.key.p)}</div><div class="fn">${esc(p.h)} ${p.res&&!p.res.void?`<b>${p.res.hs}-${p.res.as}</b>`:'vs'} ${esc(p.a)} · ${esc(p.lg)} · ${dlab(p.t)}</div></div>${lab}<span></span></div>`;}).join('')}</div>
   ${P.length>JKN?`<div style="text-align:center;margin-top:10px"><button class="btn sm" id="jkMore">Ver más (${P.length-JKN})</button></div>`:''}`;

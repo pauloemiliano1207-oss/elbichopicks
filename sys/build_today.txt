@@ -117,7 +117,7 @@ for sk,games in snap['data'].items():
             for x in(1.5,3.5,5.5,7.5,9.5,12.5):
                 p=1-ND.cdf((x-mf)/sd)
                 if 0.25<p<0.92:m.append(mk('hc',f'{fav} −{x}',p))
-                q=ND.cdf((x+mf)/sd)
+                q=ND.cdf((x-mf)/sd)  # P(el no favorito pierde por menos de x o gana)
                 if 0.25<q<0.92 and x>=3.5:m.append(mk('hc',f'{dog} +{x}',q))
             if line is not None:
                 for d in(-9,-6,-3,0,3,6,9):
