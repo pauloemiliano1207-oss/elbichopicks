@@ -1,0 +1,88 @@
+"""Re-simula los últimos partidos reales con el sistema actual de 'Partidos de hoy':
+probabilidades = Pinnacle de cierre sin margen (1X2 + total 2.5) -> Poisson/Dixon-Coles -> mercados -> jugada clave y top 3.
+Califica con el marcador real (incluye medio tiempo para mercados del 1er tiempo)."""
+import csv,io,json,math,sys,datetime as dt,collections,importlib.util
+spec=importlib.util.spec_from_file_location('bt','/home/claude/sys/bicho_build_today.py')
+src=open('/home/claude/sys/bicho_build_today.py').read();src=src[:src.index('snap=json.load')]
+ns={};exec(src,ns);fit,mat,P,pois,mk=ns['fit'],ns['mat'],ns['P'],ns['pois'],ns['mk']
+from bicho_picks import grade
+LG={'E0':'Premier League','SP1':'LaLiga','I1':'Serie A','D1':'Bundesliga','F1':'Ligue 1','N1':'Eredivisie','P1':'Liga Portugal'}
+rows=[]
+for b in open('europa.csv',encoding='utf-8-sig').read().split('### ')[1:]:
+    hdr,body=b.split('\n',1);s,d=hdr.split()
+    if s not in('2526','2627'):continue
+    for r in csv.DictReader(io.StringIO(body)):
+        try:
+            def g3(p):
+                v=[float(r[p+'H']),float(r[p+'D']),float(r[p+'A'])];assert all(x>1 for x in v);return v
+            def g2(p):
+                v=[float(r[p+'>2.5']),float(r[p+'<2.5'])];assert all(x>1 for x in v);return v
+            try:o=g3('PSC')
+            except Exception:o=g3('AvgC')
+            try:ov=g2('PC')
+            except Exception:ov=g2('AvgC')
+            dd=dt.datetime.strptime(r['Date'],'%d/%m/%Y')
+            rows.append(dict(lg=LG[d],date=dd,h=r['HomeTeam'],a=r['AwayTeam'],hs=int(r['FTHG']),as_=int(r['FTAG']),hh=int(r['HTHG']),ha=int(r['HTAG']),o=o,ov=ov,
+              avg=[float(r['AvgCH']),float(r['AvgCD']),float(r['AvgCA'])] if r.get('AvgCH') else None,avgov=[float(r['AvgC>2.5']),float(r['AvgC<2.5'])] if r.get('AvgC>2.5') else None))
+        except Exception:pass
+for r in csv.DictReader(open('ligamx.csv',encoding='utf-8-sig')):
+    try:
+        if not r['Season'].startswith(('2025','2026')):continue
+        try:o=[float(r['PSCH']),float(r['PSCD']),float(r['PSCA'])];assert all(x>1 for x in o)
+        except Exception:o=[float(r['AvgCH']),float(r['AvgCD']),float(r['AvgCA'])]
+        rows.append(dict(lg='Liga MX',date=dt.datetime.strptime(r['Date'],'%d/%m/%Y'),h=r['Home'],a=r['Away'],hs=int(r['HG']),as_=int(r['AG']),hh=None,ha=None,o=o,ov=None,avg=[float(r['AvgCH']),float(r['AvgCD']),float(r['AvgCA'])],avgov=None))
+    except Exception:pass
+rows.sort(key=lambda x:x['date']);N=int(sys.argv[1]) if len(sys.argv)>1 else 600;rows=rows[-N:]
+nv=lambda xs:[(1/x)/sum(1/y for y in xs) for x in xs]
+out=[]
+for r in rows:
+    pH,pD,pA=nv(r['o']);line,pO=(2.5,nv(r['ov'])[0]) if r['ov'] else (None,None)
+    lh,la=fit(pH,pA,line,pO);M=mat(lh,la);G=len(M);f=lambda c:P(M,c);H,A=r['h'],r['a']
+    odd=lambda i:(r['avg'][i],'avg') if r['avg'] else None
+    m=[mk('res','Gana '+H,pH,odd(0)),mk('res','Empate',pD,odd(1)),mk('res','Gana '+A,pA,odd(2)),mk('dc',H+' o empate',pH+pD),mk('dc',A+' o empate',pA+pD),mk('dc','Gana cualquiera (no empate)',pH+pA),
+       mk('hc',H+' −1.5',f(lambda i,j:i-j>=2)),mk('hc',A+' +1.5',f(lambda i,j:j-i>=-1)),mk('hc',A+' −1.5',f(lambda i,j:j-i>=2)),mk('hc',H+' +1.5',f(lambda i,j:i-j>=-1))]
+    for L in(0.5,1.5,2.5,3.5,4.5):
+        po=f(lambda i,j:i+j>L);oo=(r['avgov'][0],'avg') if L==2.5 and r['avgov'] else None;uu=(r['avgov'][1],'avg') if L==2.5 and r['avgov'] else None
+        if L<4.5:m.append(mk('tot',f'Más de {L} goles',po,oo))
+        if L>0.5:m.append(mk('tot',f'Menos de {L} goles',1-po,uu))
+    m+=[mk('btts','Ambos anotan: sí',f(lambda i,j:i>0 and j>0)),mk('btts','Ambos anotan: no',f(lambda i,j:i==0 or j==0)),mk('team',H+' anota',1-sum(M[0])),mk('team',H+' mete 2 o más',f(lambda i,j:i>=2)),mk('team',A+' anota',1-sum(M[i][0] for i in range(G))),mk('team',A+' mete 2 o más',f(lambda i,j:j>=2))]
+    l1=(lh+la)*0.445;p1=[pois(l1,k) for k in range(12)]
+    m+=[mk('1t','Gol en el 1er tiempo',1-p1[0]),mk('1t','Más de 1.5 goles en el 1er tiempo',1-p1[0]-p1[1]),mk('1t','1er tiempo sin goles',p1[0])]
+    cand=sorted([x for x in m if 0.55<=x['p']<=0.90 and x['fam']!='dnb'],key=lambda x:-x['p']);top=[];fams=set()
+    for x in cand:
+        if x['fam'] in fams:continue
+        top.append(x);fams.add(x['fam'])
+        if len(top)==3:break
+    fv=max([x for x in m if x['fam']=='res'],key=lambda x:x['p']);tight=fv['p']<0.5
+    alt=[x for x in m if 0.58<=x['p']<=0.85 and x['fam'] in('tot','btts','team','dc','hc','1t')]
+    key=fv if not tight and fv['p']<=0.85 else (max(alt,key=lambda x:x['p']) if alt else fv)
+    def g(x):
+        if x['fam']=='1t':
+            if r['hh'] is None:return None
+            t1=r['hh']+r['ha'];return {'Gol en el 1er tiempo':'win' if t1>0 else 'loss','Más de 1.5 goles en el 1er tiempo':'win' if t1>1 else 'loss','1er tiempo sin goles':'win' if t1==0 else 'loss'}[x['k']]
+        return grade(x,H,A,r['hs'],r['as_'],'fut')
+    out.append(dict(r=r,key=key,kg=g(key),top=[(x,g(x)) for x in top],fav=fv,fg=g(fv)))
+# ----- resumen -----
+def st(items):
+    xs=[(x,gg) for x,gg in items if gg in('win','loss')];n=len(xs);w=sum(gg=='win' for _,gg in xs)
+    ev=[x['ev'] for x,gg in xs if x.get('ev') is not None];roi=[(x['odd']-1 if gg=='win' else -1) for x,gg in xs if x.get('odd')]
+    return dict(n=n,w=w,acc=round(w/n,3) if n else None,exp=round(sum(x['p'] for x,_ in xs)/n,3) if n else None,roi=round(sum(roi)/len(roi),3) if roi else None,nroi=len(roi))
+R={'desde':out[0]['r']['date'].strftime('%Y-%m-%d'),'hasta':out[-1]['r']['date'].strftime('%Y-%m-%d'),'partidos':len(out)}
+R['jugada_clave']=st([(o['key'],o['kg']) for o in out])
+R['favorito_1x2']=st([(o['fav'],o['fg']) for o in out])
+R['top3_todas']=st([t for o in out for t in o['top']])
+R['top1']=st([o['top'][0] for o in out if o['top']])
+R['por_tipo']={k:st([(o['key'],o['kg']) for o in out if o['key']['fam']==k]) for k in sorted({o['key']['fam'] for o in out})}
+R['por_riesgo']={l:st([(o['key'],o['kg']) for o in out if lo<=o['key']['p']<hi]) for l,lo,hi in[('bajo (75%+)',.75,1.01),('medio (60-75%)',.6,.75),('alto (<60%)',0,.6)]}
+R['por_liga']={l:st([(o['key'],o['kg']) for o in out if o['r']['lg']==l]) for l in sorted({o['r']['lg'] for o in out})}
+# parlays de 3 jugadas clave del mismo día (agrupando por fecha), modo 'seguro' (>=72%)
+byd=collections.defaultdict(list)
+for o in out:
+    if o['kg'] in('win','loss') and o['key']['p']>=.72:byd[o['r']['date']].append(o)
+pl=[];
+for d,os_ in byd.items():
+    os_=sorted(os_,key=lambda o:-o['key']['p'])
+    for i in range(0,len(os_)-2,3):
+        tri=os_[i:i+3];pl.append((math.prod(o['key']['p'] for o in tri),all(o['kg']=='win' for o in tri)))
+R['parlays_seguros_3']=dict(n=len(pl),ganados=sum(w for _,w in pl),acc=round(sum(w for _,w in pl)/len(pl),3) if pl else None,exp=round(sum(p for p,_ in pl)/len(pl),3) if pl else None)
+json.dump(R,open('replay.json','w'),ensure_ascii=False,indent=1);print(json.dumps(R,ensure_ascii=False,indent=1))
