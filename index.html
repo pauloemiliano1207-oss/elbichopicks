@@ -478,6 +478,26 @@ footer img{height:36px}
 .mtog{display:none;width:100%;margin:10px 0;background:#141414;border:1px solid var(--line2);color:var(--t2);font:800 13px Montserrat,sans-serif;padding:12px;border-radius:14px}
 .hcard.pend{opacity:.75;border-style:dashed}
 .bigstat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bigstat div{background:#121212;border:1px solid var(--line2);border-radius:16px;padding:16px;text-align:center;display:flex;flex-direction:column;gap:4px}.bigstat b{font:900 clamp(28px,5vw,44px) 'League Spartan',Montserrat,sans-serif}.bigstat b.g{color:var(--menta)}.bigstat span{font-size:12px;color:var(--t2)}@media(max-width:560px){.bigstat{grid-template-columns:1fr}}
+/* ===== LIQUID GLASS ===== */
+body{background:
+ radial-gradient(900px 520px at 8% -120px,rgba(0,230,168,.20),transparent 62%),
+ radial-gradient(800px 520px at 100% 18%,rgba(59,130,246,.16),transparent 60%),
+ radial-gradient(700px 480px at 20% 70%,rgba(255,122,0,.08),transparent 60%),
+ radial-gradient(800px 600px at 90% 100%,rgba(0,230,168,.10),transparent 60%),var(--negro);background-attachment:fixed}
+.card,.panel,.bigd,.hcard,.pm,.pslip,.faq details,.bigstat div,.mbox{
+ background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.02) 45%,rgba(255,255,255,.035))!important;
+ border:1px solid rgba(255,255,255,.12)!important;
+ -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(255,255,255,.04),0 10px 30px rgba(0,0,0,.35)}
+.hcard,.card,.pm{position:relative;overflow:hidden}
+.hcard::before,.card::before,.pm::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+ background:linear-gradient(120deg,rgba(255,255,255,.10),transparent 30%,transparent 70%,rgba(0,230,168,.06))}
+.hcard:hover{border-color:rgba(0,230,168,.45)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 14px 36px rgba(0,230,168,.12)}
+.mbox{background:linear-gradient(145deg,rgba(30,30,30,.85),rgba(16,16,16,.8))!important}
+.hsel{background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.14)}
+header{background:rgba(11,11,11,.55)!important;-webkit-backdrop-filter:blur(20px) saturate(170%)!important;backdrop-filter:blur(20px) saturate(170%)!important}
+.modal{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+@media (max-width:700px){.card,.panel,.bigd,.hcard,.pm,.pslip,.faq details,.bigstat div{-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%)}}
 </style>
 </head>
 <body>
@@ -624,8 +644,6 @@ footer img{height:36px}
 <div class="card" id="myPicks"><p class="note" style="margin:0">Cargando…</p></div>
 
 <!-- ===== HISTORIAL PÚBLICO ===== -->
-<div class="sec" id="historial"><span class="kick">Transparencia</span><h2>Historial del <em>Bicho</em></h2><span class="sub">Picks publicados y cómo salieron</span></div>
-<div class="card" id="pubHist"><p class="note" style="margin:0">Cargando…</p></div>
 
 
 <!-- ===== PREGUNTAS ===== -->
@@ -656,9 +674,9 @@ footer img{height:36px}
 <div class="modal" id="shModal"><div class="mbox" style="max-width:560px"><div class="mhead"><h3>Tarjeta para redes</h3><button class="btn" id="shClose">Cerrar</button></div><div id="shBody"></div></div></div>
 <div class="modal" id="fichaModal"><div class="mbox"><div class="mhead"><h3>Ficha del partido</h3><button class="btn" id="fichaClose">Cerrar</button></div><div id="fichaBody"></div></div></div>
 <div class="tip" id="tip"></div><div class="toast" id="toast"></div>
-<script src="app.js?v=1794980611"></script><script src="hoy.js?v=1794980611"></script>
-<script src="panel.js?v=1794980611"></script>
-<script src="live.js?v=1794980611"></script><script src="router.js?v=1794980611"></script>
+<script src="app.js?v=1794981123"></script><script src="hoy.js?v=1794981123"></script>
+<script src="panel.js?v=1794981123"></script>
+<script src="live.js?v=1794981123"></script><script src="router.js?v=1794981123"></script>
 <!-- BROMA-12 (temporal: se borra con "borra el 12") -->
 <style>
 #broma12{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);padding:16px}

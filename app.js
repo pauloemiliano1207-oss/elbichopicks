@@ -367,14 +367,14 @@ $('aiBtn').onclick=aiAnalyze;
 /* ============ MIS PICKS ============ */
 let DB=null,UID=null,PICKS=[];
 const pickCol=()=>DB.collection('data/users/'+UID);
-async function savePick(label,prob,odd){if(!LAST)return;if(!DB||!UID){toast('Para guardar picks abre la página con tu sesión de Claude');return;}
+async function savePick(label,prob,odd){if(!LAST)return;if(!DB||!UID){toast('Guardar picks estará disponible muy pronto');return;}
   const R=LAST,doc={kind:'pick',ts:Date.now(),sport:R.sport,league:R.sport==='fut'?lgOf('H').name:R.sport.toUpperCase(),home:R.H.n,away:R.A.n,pick:label,prob:+prob.toFixed(4),odd:odd||null,status:'pendiente'};
   try{await pickCol().add(doc);toast('Pick guardado ✓');}catch(e){toast(e&&e.code==='quota_exceeded'?'Ya no caben más picks: borra algunos':'No se pudo guardar el pick');}}
 async function setStatus(id,st){try{await pickCol().doc(id).update({status:st});if(PUBIDS.has(id))await DB.doc('historial/'+id).update({status:st});}catch(e){toast('No se pudo actualizar');}}
 let PUB=[],PUBIDS=new Set(),ISOWNER=false;
 async function togglePub(p){try{if(PUBIDS.has(p.id)){await DB.doc('historial/'+p.id).delete();toast('Quitado del historial');}else{const{id,...rest}=p;await DB.doc('historial/'+p.id).set(rest);toast('Publicado en el historial ✓');}}catch(e){toast('No se pudo publicar');}}
 function renderPub(){
-  const el=$('pubHist');
+  const el=$('pubHist');if(!el)return;
   if(!DB){el.innerHTML='<p class="note" style="margin:0;font-size:14px">El historial se muestra al abrir la página con sesión de Claude.</p>';return;}
   if(!PUB.length){el.innerHTML=`<p class="note" style="margin:0;font-size:14px">${ISOWNER?'Aún no publicas picks. En <b>Mis picks</b> toca <b>Publicar</b> para que tus seguidores vean tu récord real.':'Aún no hay picks publicados.'}</p>`;return;}
   const done=PUB.filter(p=>p.status!=='pendiente'),hits=done.filter(p=>p.status==='acierto'),wo=done.filter(p=>p.odd),profit=wo.reduce((s,p)=>s+(p.status==='acierto'?(p.odd-1)*100:-100),0);
@@ -385,7 +385,7 @@ function renderPub(){
 async function delPick(id){try{await pickCol().doc(id).delete();}catch(e){toast('No se pudo borrar');}}
 function renderMyPicks(){
   const el=$('myPicks');
-  if(!DB||!UID){el.innerHTML='<p class="note" style="margin:0;font-size:14px">Para guardar tus picks y medir tu récord, abre esta página con tu sesión de Claude iniciada.</p>';return;}
+  if(!DB||!UID){el.innerHTML='<p class="note" style="margin:0;font-size:14px">Muy pronto podrás guardar tus picks aquí y medir tu récord.</p>';return;}
   if(!PICKS.length){el.innerHTML='<p class="note" style="margin:0;font-size:14px">Aún no guardas picks. Toca <b>+ Pick</b> en cualquier pick o mercado; después marca si acertó y aquí verás tu récord contra lo que esperaba el modelo.</p>';return;}
   const done=PICKS.filter(p=>p.status!=='pendiente'),hits=done.filter(p=>p.status==='acierto'),exp=done.reduce((s,p)=>s+p.prob,0),wo=done.filter(p=>p.odd),profit=wo.reduce((s,p)=>s+(p.status==='acierto'?(p.odd-1)*100:-100),0);
   const st=(l,v,s)=>`<div class="k"><div class="l">${l}</div><div class="v num">${v}</div><div class="s">${s}</div></div>`;
