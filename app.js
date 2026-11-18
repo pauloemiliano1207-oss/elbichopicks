@@ -603,7 +603,7 @@ new MutationObserver(()=>{clearTimeout(RVT);RVT=setTimeout(reveal,30);}).observe
 window.addEventListener('scroll',()=>{const h=document.documentElement;$('prog').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
 
 /* ============ ARRANQUE ============ */
-fetch('data.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+function bootApp(){fetch('data.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
   DATA=d;$('boot').classList.add('hidden');$('app').classList.remove('hidden');
   const[y,m,dd]=d.updated.split('-').map(Number);
   $('srcInfo').innerHTML=`Tablas, goles y próximos partidos al <b>${dd} ${MON[m-1]} ${y}</b> (se actualizan cada mañana). Fuentes: SportRadar (Premier, LaLiga, Serie A, Bundesliga, Ligue 1, NBA, NFL y grupos del Mundial 2026), futboltotal.futbol (goles, local/visitante y forma; Liga MX) y World Football Elo Ratings (selecciones, consultado el ${DATA.nat.nat.elo_date}). Escudos: diseño propio con los colores de cada equipo.
@@ -614,7 +614,8 @@ fetch('data.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
   <li><b>No incluidos todavía:</b> xG, datos de jugadores, lesiones, sanciones, alineaciones y modelos de machine learning. Requieren proveedores de datos con licencia y varios años de historial para entrenarlos y validarlos.</li>
   <li><b>Pruebas:</b> 868 pruebas matemáticas automáticas sin fallas. Validación con 70 partidos reales fuera de muestra (ver Récord).</li></ul></details>`;
   setupHooks();liveMount($('cv'));featured();renderPicker();runSim(false);renderPotd();renderTrust();renderEval();renderRankings();renderTourney();renderOdds();renderLineups();if(typeof initHoy==='function')initHoy();renderPlans();initCaps();reveal();
-}).catch(e=>{console.error(e);$('boot').textContent='No se pudieron cargar los datos. Recarga la página.';});
+}).catch(e=>{console.error(e);$('boot').textContent='No se pudieron cargar los datos. Recarga la página.';});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootApp);else bootApp();
 
 document.querySelectorAll('#sportsM button').forEach(b=>b.onclick=()=>{const t=document.querySelector('#sports button[data-s="'+b.dataset.sm+'"]');if(t)t.click();});
 
