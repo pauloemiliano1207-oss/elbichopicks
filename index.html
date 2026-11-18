@@ -474,9 +474,10 @@ footer img{height:36px}
   .advx{margin:24px 0;padding:4px 12px}
   .champ{grid-template-columns:repeat(2,1fr)}
 }
-@media(max-width:700px){.mcol:not(.mopen){display:none}.mtog{display:block!important}}
+@media(max-width:700px){.mcol:not(.mopen){display:none}.mtog{display:block}}
 .mtog{display:none;width:100%;margin:10px 0;background:#141414;border:1px solid var(--line2);color:var(--t2);font:800 13px Montserrat,sans-serif;padding:12px;border-radius:14px}
 .hcard.pend{opacity:.75;border-style:dashed}
+.bigstat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bigstat div{background:#121212;border:1px solid var(--line2);border-radius:16px;padding:16px;text-align:center;display:flex;flex-direction:column;gap:4px}.bigstat b{font:900 clamp(28px,5vw,44px) 'League Spartan',Montserrat,sans-serif}.bigstat b.g{color:var(--menta)}.bigstat span{font-size:12px;color:var(--t2)}@media(max-width:560px){.bigstat{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -537,7 +538,7 @@ footer img{height:36px}
 <div class="sec" id="parlays"><span class="kick">Arma tu combinada</span><h2>Generador de <em>parlays</em></h2><span class="sub">Con la probabilidad real de que salga</span></div>
 <div class="card" id="parBox"></div>
 <!-- ===== CONFIANZA ===== -->
-<section class="trust" id="confianza">
+<section class="trust" id="confianza"><div id="bigStat" style="margin-bottom:18px"></div>
   <div class="tiles" id="tiles"></div>
   <p class="tnote" id="tnote"></p>
   <div class="badges"><span class="bdg"><i>●</i>Datos oficiales de SportRadar</span><span class="bdg" id="bdgUpd"><i>↻</i>Actualizado a diario</span><span class="bdg"><i>✓</i>Récord público y verificable</span><span class="bdg"><i>!</i>Sin promesas de ganancia</span><span class="bdg"><i>18+</i>Juego responsable</span></div>
@@ -655,9 +656,9 @@ footer img{height:36px}
 <div class="modal" id="shModal"><div class="mbox" style="max-width:560px"><div class="mhead"><h3>Tarjeta para redes</h3><button class="btn" id="shClose">Cerrar</button></div><div id="shBody"></div></div></div>
 <div class="modal" id="fichaModal"><div class="mbox"><div class="mhead"><h3>Ficha del partido</h3><button class="btn" id="fichaClose">Cerrar</button></div><div id="fichaBody"></div></div></div>
 <div class="tip" id="tip"></div><div class="toast" id="toast"></div>
-<script src="app.js?v=1794979378"></script><script src="hoy.js?v=1794979378"></script>
-<script src="panel.js?v=1794979378"></script>
-<script src="live.js?v=1794979378"></script>
+<script src="app.js?v=1794980611"></script><script src="hoy.js?v=1794980611"></script>
+<script src="panel.js?v=1794980611"></script>
+<script src="live.js?v=1794980611"></script><script src="router.js?v=1794980611"></script>
 <!-- BROMA-12 (temporal: se borra con "borra el 12") -->
 <style>
 #broma12{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);padding:16px}

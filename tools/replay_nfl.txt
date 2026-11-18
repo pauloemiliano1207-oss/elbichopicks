@@ -29,7 +29,7 @@ def st(items):
     xs=[(x,gg) for x,gg in items if gg in('win','loss')];n=len(xs);w=sum(gg=='win' for _,gg in xs)
     roi=[(x['odd']-1 if gg=='win' else -1) for x,gg in xs if x.get('odd')]
     return dict(n=n,w=w,acc=round(w/n,3) if n else None,exp=round(sum(x['p'] for x,_ in xs)/n,3) if n else None,roi=round(sum(roi)/len(roi),3) if roi else None)
-rows=[r for r in csv.DictReader(open('games.csv')) if r['home_score'] and r['home_moneyline'] and r['total_line'] and int(r['season'])>=2021]
+rows=[r for r in csv.DictReader(open('games.csv')) if r['home_score'] and r['home_moneyline'] and r['total_line'] and int(r['season'])>=int(__import__('os').environ.get('NFL_FROM','2021'))]
 print('partidos',len(rows),rows[0]['gameday'],rows[-1]['gameday'])
 for SD,SDT in[(13.5,13.5),(13.0,13.0),(14.0,13.0),(13.5,12.5)]:
     o=run(rows,SD,SDT);print(SD,SDT,'clave',st([(x['key'],x['kg']) for x in o]),'top3',st([t for x in o for t in x['top']]))

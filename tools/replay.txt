@@ -10,7 +10,7 @@ LG={'E0':'Premier League','SP1':'LaLiga','I1':'Serie A','D1':'Bundesliga','F1':'
 rows=[]
 for b in open('europa.csv',encoding='utf-8-sig').read().split('### ')[1:]:
     hdr,body=b.split('\n',1);s,d=hdr.split()
-    if s not in('2526','2627'):continue
+    if s not in('2122','2223','2324','2425','2526','2627'):continue
     for r in csv.DictReader(io.StringIO(body)):
         try:
             def g3(p):
@@ -27,15 +27,14 @@ for b in open('europa.csv',encoding='utf-8-sig').read().split('### ')[1:]:
         except Exception:pass
 for r in csv.DictReader(open('ligamx.csv',encoding='utf-8-sig')):
     try:
-        if not r['Season'].startswith(('2025','2026')):continue
+        if not r['Season'].startswith(('2021','2022','2023','2024','2025','2026')):continue
         try:o=[float(r['PSCH']),float(r['PSCD']),float(r['PSCA'])];assert all(x>1 for x in o)
         except Exception:o=[float(r['AvgCH']),float(r['AvgCD']),float(r['AvgCA'])]
         rows.append(dict(lg='Liga MX',date=dt.datetime.strptime(r['Date'],'%d/%m/%Y'),h=r['Home'],a=r['Away'],hs=int(r['HG']),as_=int(r['AG']),hh=None,ha=None,o=o,ov=None,avg=[float(r['AvgCH']),float(r['AvgCD']),float(r['AvgCA'])],avgov=None))
     except Exception:pass
 rows.sort(key=lambda x:x['date']);N=int(sys.argv[1]) if len(sys.argv)>1 else 600;rows=rows[-N:]
 nv=lambda xs:[(1/x)/sum(1/y for y in xs) for x in xs]
-out=[]
-for r in rows:
+def one(r):
     pH,pD,pA=nv(r['o']);line,pO=(2.5,nv(r['ov'])[0]) if r['ov'] else (None,None)
     lh,la=fit(pH,pA,line,pO);M=mat(lh,la);G=len(M);f=lambda c:P(M,c);H,A=r['h'],r['a']
     odd=lambda i:(r['avg'][i],'avg') if r['avg'] else None
@@ -61,28 +60,33 @@ for r in rows:
             if r['hh'] is None:return None
             t1=r['hh']+r['ha'];return {'Gol en el 1er tiempo':'win' if t1>0 else 'loss','Más de 1.5 goles en el 1er tiempo':'win' if t1>1 else 'loss','1er tiempo sin goles':'win' if t1==0 else 'loss'}[x['k']]
         return grade(x,H,A,r['hs'],r['as_'],'fut')
-    out.append(dict(r=r,key=key,kg=g(key),top=[(x,g(x)) for x in top],fav=fv,fg=g(fv)))
-# ----- resumen -----
-def st(items):
-    xs=[(x,gg) for x,gg in items if gg in('win','loss')];n=len(xs);w=sum(gg=='win' for _,gg in xs)
-    ev=[x['ev'] for x,gg in xs if x.get('ev') is not None];roi=[(x['odd']-1 if gg=='win' else -1) for x,gg in xs if x.get('odd')]
-    return dict(n=n,w=w,acc=round(w/n,3) if n else None,exp=round(sum(x['p'] for x,_ in xs)/n,3) if n else None,roi=round(sum(roi)/len(roi),3) if roi else None,nroi=len(roi))
-R={'desde':out[0]['r']['date'].strftime('%Y-%m-%d'),'hasta':out[-1]['r']['date'].strftime('%Y-%m-%d'),'partidos':len(out)}
-R['jugada_clave']=st([(o['key'],o['kg']) for o in out])
-R['favorito_1x2']=st([(o['fav'],o['fg']) for o in out])
-R['top3_todas']=st([t for o in out for t in o['top']])
-R['top1']=st([o['top'][0] for o in out if o['top']])
-R['por_tipo']={k:st([(o['key'],o['kg']) for o in out if o['key']['fam']==k]) for k in sorted({o['key']['fam'] for o in out})}
-R['por_riesgo']={l:st([(o['key'],o['kg']) for o in out if lo<=o['key']['p']<hi]) for l,lo,hi in[('bajo (75%+)',.75,1.01),('medio (60-75%)',.6,.75),('alto (<60%)',0,.6)]}
-R['por_liga']={l:st([(o['key'],o['kg']) for o in out if o['r']['lg']==l]) for l in sorted({o['r']['lg'] for o in out})}
-# parlays de 3 jugadas clave del mismo día (agrupando por fecha), modo 'seguro' (>=72%)
-byd=collections.defaultdict(list)
-for o in out:
-    if o['kg'] in('win','loss') and o['key']['p']>=.72:byd[o['r']['date']].append(o)
-pl=[];
-for d,os_ in byd.items():
-    os_=sorted(os_,key=lambda o:-o['key']['p'])
-    for i in range(0,len(os_)-2,3):
-        tri=os_[i:i+3];pl.append((math.prod(o['key']['p'] for o in tri),all(o['kg']=='win' for o in tri)))
-R['parlays_seguros_3']=dict(n=len(pl),ganados=sum(w for _,w in pl),acc=round(sum(w for _,w in pl)/len(pl),3) if pl else None,exp=round(sum(p for p,_ in pl)/len(pl),3) if pl else None)
-json.dump(R,open('replay.json','w'),ensure_ascii=False,indent=1);print(json.dumps(R,ensure_ascii=False,indent=1))
+    return dict(r=r,key=key,kg=g(key),top=[(x,g(x)) for x in top],fav=fv,fg=g(fv))
+
+import multiprocessing as mp
+if __name__=='__main__':
+  with mp.Pool(2) as pool:out=pool.map(one,rows,chunksize=200)
+  # ----- resumen -----
+  def st(items):
+      xs=[(x,gg) for x,gg in items if gg in('win','loss')];n=len(xs);w=sum(gg=='win' for _,gg in xs)
+      ev=[x['ev'] for x,gg in xs if x.get('ev') is not None];roi=[(x['odd']-1 if gg=='win' else -1) for x,gg in xs if x.get('odd')]
+      return dict(n=n,w=w,acc=round(w/n,3) if n else None,exp=round(sum(x['p'] for x,_ in xs)/n,3) if n else None,roi=round(sum(roi)/len(roi),3) if roi else None,nroi=len(roi))
+  R={'desde':out[0]['r']['date'].strftime('%Y-%m-%d'),'hasta':out[-1]['r']['date'].strftime('%Y-%m-%d'),'partidos':len(out)}
+  R['jugada_clave']=st([(o['key'],o['kg']) for o in out])
+  R['favorito_1x2']=st([(o['fav'],o['fg']) for o in out])
+  R['top3_todas']=st([t for o in out for t in o['top']])
+  R['top1']=st([o['top'][0] for o in out if o['top']])
+  R['por_tipo']={k:st([(o['key'],o['kg']) for o in out if o['key']['fam']==k]) for k in sorted({o['key']['fam'] for o in out})}
+  R['por_riesgo']={l:st([(o['key'],o['kg']) for o in out if lo<=o['key']['p']<hi]) for l,lo,hi in[('bajo (75%+)',.75,1.01),('medio (60-75%)',.6,.75),('alto (<60%)',0,.6)]}
+  R['por_liga']={l:st([(o['key'],o['kg']) for o in out if o['r']['lg']==l]) for l in sorted({o['r']['lg'] for o in out})}
+  # parlays de 3 jugadas clave del mismo día (agrupando por fecha), modo 'seguro' (>=72%)
+  byd=collections.defaultdict(list)
+  for o in out:
+      if o['kg'] in('win','loss') and o['key']['p']>=.72:byd[o['r']['date']].append(o)
+  pl=[];
+  for d,os_ in byd.items():
+      os_=sorted(os_,key=lambda o:-o['key']['p'])
+      for i in range(0,len(os_)-2,3):
+          tri=os_[i:i+3];pl.append((math.prod(o['key']['p'] for o in tri),all(o['kg']=='win' for o in tri)))
+  R['parlays_seguros_3']=dict(n=len(pl),ganados=sum(w for _,w in pl),acc=round(sum(w for _,w in pl)/len(pl),3) if pl else None,exp=round(sum(p for p,_ in pl)/len(pl),3) if pl else None)
+  json.dump(R,open(sys.argv[2] if len(sys.argv)>2 else 'replay.json','w'),ensure_ascii=False,indent=1);print(json.dumps(R,ensure_ascii=False,indent=1))
+  

@@ -375,7 +375,7 @@ function renderOdds(){const el=$('oddsBox');if(!el)return;
 }
 
 /* ---------- Alineaciones y bajas (365Scores vía Apify) ---------- */
-let LU=null,LULG='Todas';
+let LU=null,LULG='Todas',LUMAX=10;
 function renderLineups(){const el=$('luBox');if(!el)return;
   if(!LU){fetch('lineups.json').then(r=>r.json()).then(j=>{LU=j;renderLineups();}).catch(()=>{el.innerHTML='';});return;}
   const now=Date.now(),gs=LU.games.filter(g=>new Date(g.t).getTime()>now-2*3600e3).sort((a,b)=>a.t<b.t?-1:1),lgs=['Todas',...new Set(gs.map(g=>g.lg))],list=gs.filter(g=>LULG==='Todas'||g.lg===LULG);
@@ -383,6 +383,6 @@ function renderLineups(){const el=$('luBox');if(!el)return;
   const bj=s=>`${s.miss?`<b style="color:#FF7A00">${s.miss} baja${s.miss>1?'s':''}</b>`:'Sin bajas'}${s.doubt?` · ${s.doubt} duda${s.doubt>1?'s':''}`:''}`;
   el.innerHTML=`<h3 class="t" style="margin-top:0">Alineaciones y bajas</h3><p class="note" style="margin-top:4px">Alineación probable o confirmada, lesionados y dudas de los próximos 4 días. Calificación = promedio del 11 inicial (escala 0–10). Fuente: 365Scores. Actualizado ${new Date(LU.taken).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'})}.</p>
   <div class="leagues">${lgs.map(l=>`<button class="lg ${LULG===l?'on':''}" data-lu="${esc(l)}">${esc(l)}</button>`).join('')}</div>
-  <div style="overflow-x:auto"><table class="ftab"><thead><tr><th>Partido</th><th>Local</th><th>Visitante</th></tr></thead><tbody>${list.map(g=>`<tr><td><b>${esc(g.h.n)} vs ${esc(g.a.n)}</b><div class="fn">${esc(g.lg)} · ${new Date(g.t).toLocaleString('es-MX',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div></td>${[g.h,g.a].map(s=>`<td>${pill(s.st)} <span class="fn">${esc(s.fm||'')}${s.xi?' · calif. '+s.xi.toFixed(1):''}</span><div>${bj(s)}</div></td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  <div style="overflow-x:auto"><table class="ftab"><thead><tr><th>Partido</th><th>Local</th><th>Visitante</th></tr></thead><tbody>${list.slice(0,LUMAX).map(g=>`<tr><td><b>${esc(g.h.n)} vs ${esc(g.a.n)}</b><div class="fn">${esc(g.lg)} · ${new Date(g.t).toLocaleString('es-MX',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div></td>${[g.h,g.a].map(s=>`<td>${pill(s.st)} <span class="fn">${esc(s.fm||'')}${s.xi?' · calif. '+s.xi.toFixed(1):''}</span><div>${bj(s)}</div></td>`).join('')}</tr>`).join('')}</tbody></table></div>${list.length>LUMAX?`<div style="text-align:center;margin-top:10px"><button class="btn sm" id="luMore">Ver más partidos (${list.length-LUMAX})</button></div>`:''}
   <p class="note">Las bajas ya suelen estar reflejadas en las cuotas de las casas, y nuestro pronóstico final pesa 75% mercado. Por eso aquí son información para ti: el modelo no las ajusta solo.</p>`;
-  el.querySelectorAll('[data-lu]').forEach(b=>b.onclick=()=>{LULG=b.dataset.lu;renderLineups();});}
+  el.querySelectorAll('[data-lu]').forEach(b=>b.onclick=()=>{LULG=b.dataset.lu;LUMAX=10;renderLineups();});if($('luMore'))$('luMore').onclick=()=>{LUMAX+=20;renderLineups();};}

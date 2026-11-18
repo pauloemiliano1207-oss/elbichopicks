@@ -545,7 +545,7 @@ $('logoTop').onclick=e=>{e.preventDefault();introOn();};
 $('burger').onclick=()=>$('menu').classList.toggle('open');
 window.addEventListener('scroll',()=>{document.querySelector('header').classList.toggle('scrolled',scrollY>10);
   const ids=['envivo','hoy','parlays','gana','choose','torneos','cuotas','metodo','planes','mispicks'];let cur='envivo';for(const id of ids){const e=$(id);if(e&&e.getBoundingClientRect().top<140)cur=id;}
-  document.querySelectorAll('#menu a').forEach(a=>a.classList.toggle('on',(a.dataset.go===cur||((cur==='envivo'||cur==='gana'||cur==='choose')&&a.dataset.go==='top'))));},{passive:true});
+  /* el menú lo marca router.js */},{passive:true});
 
 
 /* ============ CONFIANZA Y RÉCORD ============ */
