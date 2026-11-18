@@ -53,8 +53,8 @@ for r in rows:
         if x['fam'] in fams:continue
         top.append(x);fams.add(x['fam'])
         if len(top)==3:break
-    fv=max([x for x in m if x['fam']=='res'],key=lambda x:x['p']);tight=fv['p']<0.5
-    alt=[x for x in m if 0.58<=x['p']<=0.85 and x['fam'] in('tot','btts','team','dc','hc','1t')]
+    fv=max([x for x in m if x['fam']=='res'],key=lambda x:x['p']);tight=fv['p']<0.62
+    alt=[x for x in m if 0.62<=x['p']<=0.85 and x['fam'] in('tot','btts','team','dc','hc','1t')]
     key=fv if not tight and fv['p']<=0.85 else (max(alt,key=lambda x:x['p']) if alt else fv)
     def g(x):
         if x['fam']=='1t':
