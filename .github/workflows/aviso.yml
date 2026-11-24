@@ -1,0 +1,22 @@
+name: Aviso de prueba por Telegram
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ['sys/telegram_ping.txt']
+permissions:
+  contents: write
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mandar aviso
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        run: python3 tools/aviso.py . 2>&1 | tee sys/telegram_log.txt
+      - name: Guardar chat detectado
+        run: |
+          git config user.name "El Bicho Picks"; git config user.email "bot@elbichopicks.pages.dev"
+          git add -A; git diff --cached --quiet || (git commit -m "Telegram: registro" && (git push || (git pull --rebase && git push)))

@@ -32,3 +32,5 @@ cp "$W/bicho_senales.json" sys/senales.json; cp "$W/picks.json" sys/picks.json; 
 echo "== 3) Revisión de seguridad =="
 if grep -rlF -e "$ODDS_API_KEY" -e "$APIFY_TOKEN" --exclude-dir=.git . ; then echo "¡Clave encontrada en archivos! No se publica."; git checkout -- .; exit 1; fi
 echo "OK"
+echo "== 4) Aviso por Telegram =="
+python3 tools/aviso.py "$R" || echo "Telegram: no se pudo enviar"
