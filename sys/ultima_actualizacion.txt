@@ -1,0 +1,12 @@
+== 1) Tablas, récord y Elo (ESPN + eloratings) ==
+epl: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
+laliga: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
+seriea: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
+bund: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
+ligue1: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
+ligamx: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
+nba: ERROR HTTP Error 403: Forbidden
+nfl: ERROR HTTP Error 403: Forbidden
+elo: ok
+data.json: actualizado y pruebas OK
+Faltan las claves secretas ODDS_API_KEY / APIFY_TOKEN en GitHub: solo se actualizaron tablas.
