@@ -3,6 +3,9 @@ on:
   schedule:
     - cron: '40 11 * * *'   # 5:40 a.m. hora de CDMX (GitHub puede tardar unos minutos)
   workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ['tools/auto.py', 'tools/diario.sh', '.github/workflows/diario.yml']
 permissions:
   contents: write
 concurrency: diario
@@ -16,7 +19,9 @@ jobs:
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
-        run: bash tools/diario.sh
+        run: |
+          set -o pipefail
+          bash tools/diario.sh 2>&1 | tee sys/ultima_actualizacion.txt
       - name: Publicar
         run: |
           git config user.name "El Bicho Picks"
