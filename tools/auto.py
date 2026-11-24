@@ -5,7 +5,7 @@ Uso:
   python3 tools/auto.py extra  <work>   -> escribe <work>/extra.json (partidos de selecciones de CONCACAF sin cuotas, modelo Elo)
   python3 tools/auto.py h1     <picks.json> -> califica las jugadas de primer tiempo con los goles por minuto de ESPN
 Si una fuente falla, deja los datos anteriores y lo anota en la salida (nunca inventa datos)."""
-import json, re, sys, os, math, subprocess, shutil, tempfile, urllib.request, datetime as dt
+import json, re, sys, os, math, subprocess, shutil, tempfile, urllib.request, datetime as dt, collections
 
 UA = {'User-Agent': 'Mozilla/5.0 (elbichopicks bot)'}
 MX = dt.timezone(dt.timedelta(hours=-6))  # CDMX (sin horario de verano desde 2022)
@@ -52,67 +52,131 @@ def months(back=6, fwd=1):
     return out
 
 # =====================================================================================
+# Fuentes que permiten descarga automática: football-data.co.uk (fútbol, con goles al medio tiempo) y nflverse (NFL).
+import csv, io, unicodedata
+FD = 'https://www.football-data.co.uk'
+FD_DIV = {'epl': 'E0', 'laliga': 'SP1', 'seriea': 'I1', 'bund': 'D1', 'ligue1': 'F1'}
+FD_ALIAS = {
+ 'Man City': 'Manchester City', 'Man United': 'Manchester United', "Nott'm Forest": 'Nottingham Forest', 'Hull': 'Hull City', 'Ipswich': 'Ipswich Town',
+ 'Coventry': 'Coventry City', 'Leeds': 'Leeds United', 'Spurs': 'Tottenham',
+ 'Ath Bilbao': 'Athletic Club', 'Ath Madrid': 'Atlético de Madrid', 'Betis': 'Real Betis', 'Sociedad': 'Real Sociedad', 'Vallecano': 'Rayo Vallecano',
+ 'Espanol': 'Espanyol', 'La Coruna': 'Deportivo La Coruña', 'Santander': 'Racing Santander', 'Celta': 'Celta de Vigo', 'Alaves': 'Alavés', 'Malaga': 'Málaga',
+ 'Bayern Munich': 'Bayern Múnich', 'Dortmund': 'Borussia Dortmund', 'Leverkusen': 'Bayer Leverkusen', "M'gladbach": "Borussia M'gladbach",
+ 'Ein Frankfurt': 'Eintracht Frankfurt', 'FC Koln': 'Colonia', 'Hamburg': 'Hamburgo', 'Schalke 04': 'Schalke 04', 'Werder Bremen': 'Werder Bremen',
+ 'Paris SG': 'PSG', 'Paris FC': 'Paris FC', 'St Etienne': 'Saint-Étienne',
+ 'Club America': 'América', 'America': 'América', 'Atl. San Luis': 'Atlético San Luis', 'San Luis': 'Atlético San Luis', 'Guadalajara Chivas': 'Guadalajara',
+ 'Chivas': 'Guadalajara', 'U.N.A.M.- Pumas': 'Pumas', 'UNAM': 'Pumas', 'Pumas UNAM': 'Pumas', 'U.A.N.L.- Tigres': 'Tigres', 'Tigres UANL': 'Tigres',
+ 'Club Tijuana': 'Tijuana', 'Queretaro': 'Querétaro', 'Leon': 'León', 'Juarez': 'Juárez', 'FC Juarez': 'Juárez', 'Santos': 'Santos Laguna', 'Mazatlan FC': 'Mazatlán',
+}
+STOP = {'fc', 'cf', 'ac', 'afc', 'sc', 'sv', 'tsg', 'club', 'de', 'and', 'hove', 'albion', 'calcio', 'ssc', 'as', 'us', 'ogc', 'rc', 'stade', 'olympique', 'vfb', 'vfl', '1', 'bc', 'cd', 'ud', 'rcd', 'ca', 'deportivo'}
+def norm(x):
+    x = unicodedata.normalize('NFKD', x).encode('ascii', 'ignore').decode().lower()
+    return {t for t in re.split(r"[\s\.\-'’/]+", x) if t and t not in STOP}
+def matcher(names):
+    """devuelve f(nombre_externo) -> nombre del sitio o None"""
+    names = list(names); N = {n: norm(n) for n in names}
+    def f(x):
+        if x in names: return x
+        if FD_ALIAS.get(x) in names: return FD_ALIAS[x]
+        t = norm(x); best = [(len(t & N[n]) / max(1, len(t | N[n])), n) for n in names]
+        best.sort(reverse=True)
+        if best and best[0][0] >= 0.5 and (len(best) == 1 or best[1][0] < best[0][0]): return best[0][1]
+        return None
+    return f
+def fd_csv(path):
+    return list(csv.DictReader(io.StringIO(get(FD + path, raw=True).lstrip('﻿'))))
+def fd_date(d):
+    dd, mm, yy = d.split('/'); yy = int(yy); yy += 2000 if yy < 100 else 0
+    return dt.date(yy, int(mm), int(dd))
+def season_code():
+    y = TODAY.year if TODAY.month >= 7 else TODAY.year - 1
+    return f'{y % 100:02d}{(y + 1) % 100:02d}', dt.date(y, 7, 1)
+
+def soccer_matches(key, ab):
+    """partidos terminados de la temporada: (fecha, local, visitante, gl, gv) con nombres del sitio"""
+    f = matcher(ab); miss = set(); out = []
+    sc, start = season_code()
+    if key == 'ligamx':
+        rows = fd_csv('/new/MEX.csv')
+        for r in rows:
+            try: d = fd_date(r['Date'])
+            except Exception: continue
+            if d < start or r.get('HG', '') == '': continue
+            h, a = f(r['Home']), f(r['Away'])
+            if not h: miss.add(r['Home'])
+            if not a: miss.add(r['Away'])
+            if h and a: out.append((d, h, a, int(r['HG']), int(r['AG'])))
+    else:
+        for r in fd_csv(f'/mmz4281/{sc}/{FD_DIV[key]}.csv'):
+            if not r.get('FTHG'): continue
+            h, a = f(r['HomeTeam']), f(r['AwayTeam'])
+            if not h: miss.add(r['HomeTeam'])
+            if not a: miss.add(r['AwayTeam'])
+            if h and a: out.append((fd_date(r['Date']), h, a, int(r['FTHG']), int(r['FTAG'])))
+    return sorted(out), miss
+
 def cmd_data(repo):
     log = []
     bd_p = os.path.join(repo, 'tools/build_data.txt'); st_p = os.path.join(repo, 'tools/stats_fut.txt'); na_p = os.path.join(repo, 'tools/nations.txt')
     bd = open(bd_p, encoding='utf-8').read(); stats_old = open(st_p, encoding='utf-8').read(); nat = open(na_p, encoding='utf-8').read()
-    # equipos del sitio por liga: nombre -> abreviatura
     fut = bd[bd.index('FUT = {'):bd.index('# ventaja extra')]
     OUR = {}
     for mm in re.finditer(r'"(\w+)": \{"name"', fut):
         seg = fut[mm.end():].split('"teams":[', 1)[1].split(']}', 1)[0]
         OUR[mm.group(1)] = dict(re.findall(r'\("([^"]+)","(\w+)"', seg))
-    results, upcoming = [], {}
-    new_stats = {}
-    for key, code in LEAGUES.items():
+    results, upcoming, new_stats = [], {}, {}
+    for key in LEAGUES:
         try:
-            S = standings('soccer', code); ent = S['children'][0]['standings']['entries']
-            evs = []
-            for m in months(): evs += scoreboard('soccer', code, m)
-            ab = OUR[key]; miss = set()
-            table = {}
-            for e in ent:
-                n = nm(e['team']['displayName']); s = {x['name']: x.get('value') for x in e['stats']}
-                if n not in ab: miss.add(n); continue
-                table[n] = dict(w=int(s['wins']), d=int(s['ties']), l=int(s['losses']), gf=int(s['pointsFor']), ga=int(s['pointsAgainst']))
-            if miss: log.append(f'{key}: equipos sin mapear {sorted(miss)} (se conservan datos anteriores)')
-            if len(table) < len(ab) * 0.8: raise RuntimeError(f'solo {len(table)} de {len(ab)} equipos')
-            # tabla en build_data
-            for n, t in table.items():
-                a = ab[n]
+            ab = OUR[key]; M, miss = soccer_matches(key, ab)
+            if miss: log.append(f'{key}: nombres sin mapear {sorted(miss)}')
+            if key == 'ligamx':  # tabla de fase regular: los primeros 17 partidos de cada equipo (la liguilla no cuenta)
+                cnt = collections.Counter(); reg = []
+                for m in M:
+                    if cnt[m[1]] < 17 and cnt[m[2]] < 17: reg.append(m); cnt[m[1]] += 1; cnt[m[2]] += 1
+                TM = reg
+            else: TM = M
+            T = {n: dict(w=0, d=0, l=0, gf=0, ga=0) for n in ab}
+            sp = {n: dict(hp=0, hgf=0, hga=0, ap=0, agf=0, aga=0, f=[]) for n in ab}
+            for d, h, a, x, y in TM:
+                T[h]['gf'] += x; T[h]['ga'] += y; T[a]['gf'] += y; T[a]['ga'] += x
+                if x > y: T[h]['w'] += 1; T[a]['l'] += 1
+                elif x < y: T[a]['w'] += 1; T[h]['l'] += 1
+                else: T[h]['d'] += 1; T[a]['d'] += 1
+            for d, h, a, x, y in M:
+                sp[h]['hp'] += 1; sp[h]['hgf'] += x; sp[h]['hga'] += y; sp[h]['f'].append('G' if x > y else 'E' if x == y else 'P')
+                sp[a]['ap'] += 1; sp[a]['agf'] += y; sp[a]['aga'] += x; sp[a]['f'].append('G' if y > x else 'E' if x == y else 'P')
+                if (TODAY - d).days <= 8: results.append((key, d.isoformat(), ab[h], ab[a], x, y))
+            played = sum(1 for t in T.values() if t['w'] + t['d'] + t['l'])
+            if played < len(ab) * 0.8: raise RuntimeError(f'solo {played} de {len(ab)} equipos con partidos')
+            for n, t in T.items():
+                a_ = ab[n]
                 if key == 'ligamx':
-                    bd, k = re.subn(r'\("%s","%s",\d+,\d+,\d+,\(\d+,\d+\)' % (re.escape(n), a), f'("{n}","{a}",{t["w"]},{t["d"]},{t["l"]},({t["gf"]},{t["ga"]})', bd)
+                    bd = re.sub(r'\("%s","%s",\d+,\d+,\d+,\(\d+,\d+\)' % (re.escape(n), a_), f'("{n}","{a_}",{t["w"]},{t["d"]},{t["l"]},({t["gf"]},{t["ga"]})', bd)
                 else:
-                    bd, k = re.subn(r'\("%s","%s",\d+,\d+,\d+' % (re.escape(n), a), f'("{n}","{a}",{t["w"]},{t["d"]},{t["l"]}', bd)
-            # local / visitante y forma a partir de los partidos terminados
-            sp = {n: dict(hp=0, hgf=0, hga=0, ap=0, agf=0, aga=0, f=[]) for n in table}
-            seen = set()
-            for e in sorted(evs, key=lambda e: e['date']):
-                if e['id'] in seen: continue
-                seen.add(e['id']); c = e['competitions'][0]; t = {x['homeAway']: x for x in c['competitors']}
-                hn, an = nm(t['home']['team']['displayName']), nm(t['away']['team']['displayName'])
-                if e['status']['type'].get('completed') and t['home'].get('score') not in (None, ''):
-                    hs, as_ = int(float(t['home']['score'])), int(float(t['away']['score']))
-                    if hn in sp: sp[hn]['hp'] += 1; sp[hn]['hgf'] += hs; sp[hn]['hga'] += as_; sp[hn]['f'].append('G' if hs > as_ else 'E' if hs == as_ else 'P')
-                    if an in sp: sp[an]['ap'] += 1; sp[an]['agf'] += as_; sp[an]['aga'] += hs; sp[an]['f'].append('G' if as_ > hs else 'E' if hs == as_ else 'P')
-                    d = cdmx(e['date']).date()
-                    if (TODAY - d).days <= 8 and hn in ab and an in ab:
-                        results.append((key, d.isoformat(), ab[hn], ab[an], hs, as_))
-                elif e['status']['type'].get('state') == 'pre' and key != 'ligamx':
-                    t0 = cdmx(e['date'])
-                    if 0 <= (t0.date() - TODAY).days <= 7 and hn in ab and an in ab:
-                        upcoming.setdefault(key, []).append((t0.strftime('%Y-%m-%d %H:%M'), ab[hn], ab[an], None, None, None))
-            new_stats[key] = [(n, table[n], sp[n]) for n in table]
-            log.append(f'{key}: tabla {len(table)} equipos, {len(seen)} partidos')
+                    bd = re.sub(r'\("%s","%s",\d+,\d+,\d+' % (re.escape(n), a_), f'("{n}","{a_}",{t["w"]},{t["d"]},{t["l"]}', bd)
+            new_stats[key] = [(n, T[n], sp[n]) for n in ab]
+            log.append(f'{key}: {len(M)} partidos ({max(m[0] for m in M)} el más reciente)')
         except Exception as ex:
             log.append(f'{key}: ERROR {ex} (se conserva lo anterior)')
-    # stats_fut.txt: se reescribe por liga; las ligas que fallaron conservan sus líneas
+    # próximos partidos de fútbol (calendario de football-data)
+    try:
+        DIV2 = {v: k for k, v in FD_DIV.items()}
+        for r in fd_csv('/fixtures.csv'):
+            k = DIV2.get(r.get('Div'))
+            if not k: continue
+            ab = OUR[k]; f = matcher(ab); h, a = f(r['HomeTeam']), f(r['AwayTeam'])
+            if not h or not a: continue
+            d = fd_date(r['Date']); hh, mi = (r.get('Time') or '15:00').split(':')
+            t0 = dt.datetime(d.year, d.month, d.day, int(hh), int(mi), tzinfo=dt.timezone(dt.timedelta(hours=0))).astimezone(MX)  # hora del Reino Unido (aprox.)
+            if 0 <= (t0.date() - TODAY).days <= 7: upcoming.setdefault(k, []).append((t0.strftime('%Y-%m-%d %H:%M'), ab[h], ab[a], None, None, None))
+    except Exception as ex: log.append(f'calendario fútbol: ERROR {ex}')
+    # stats_fut.txt
     old = {}; lg = None
     for ln in stats_old.splitlines():
         if ln.startswith('['): lg = ln[1:-1]; old[lg] = []; continue
         if lg and ln.strip() and not ln.startswith('#'): old[lg].append(ln)
-    hdr = [l for l in stats_old.splitlines() if l.startswith('#')][:1]
-    out = [f'# Estadísticas por equipo (fuente: ESPN, actualizado automáticamente el {TODAY.isoformat()})' if new_stats else (hdr[0] if hdr else '#'),
+    hdr = [l for l in stats_old.splitlines() if l.startswith('#')]
+    out = [f'# Estadísticas por equipo (fuente: football-data.co.uk, actualizado automáticamente el {TODAY.isoformat()})' if new_stats else (hdr[0] if hdr else '#'),
            '# Equipo | GF GC | PJ_local GF_local GC_local | PJ_visita GF_visita GC_visita | Forma (últimos 5, el más reciente al final)']
     for key in LEAGUES:
         out.append(f'[{key}]')
@@ -121,40 +185,42 @@ def cmd_data(repo):
                 out.append(f"{n}|{t['gf']} {t['ga']}|{s['hp']} {s['hgf']} {s['hga']}|{s['ap']} {s['agf']} {s['aga']}|{''.join(s['f'][-5:]) or 'E'}")
         else: out += old.get(key, [])
     stats_new = '\n'.join(out) + '\n'
-    # NBA
-    try:
-        S = standings('basketball', 'nba'); rows = []
-        for ch in S['children']:
-            conf = 'Este' if 'East' in ch['name'] else 'Oeste'
-            for e in ch['standings']['entries']:
-                s = {x['name']: x.get('value') for x in e['stats']}; rows.append((e['team']['displayName'], int(s['wins']), int(s['losses']), conf))
-        if len(rows) == 30: bd = re.sub(r'NBA_REC = \[.*?\]\n', 'NBA_REC = ' + repr(rows) + '\n', bd, count=1, flags=re.S); log.append('nba: ok')
-    except Exception as ex: log.append(f'nba: ERROR {ex}')
-    # NFL
+    # NFL con nflverse (récord, resultados y próximos partidos)
     NFL_AB = dict(re.findall(r"\('([^']+)', '(\w+)'", bd[bd.index('NFL_REC'):bd.index('NFL_REC') + 4000]))
+    AB2N = {v: k for k, v in NFL_AB.items()}; CONF = {r[1]: r[5] for r in re.findall(r"\('([^']+)', '(\w+)', (\d+), (\d+), ([\d.]+), '(\w+)'\)", bd)}
     try:
-        S = standings('football', 'nfl'); rows = []
-        for ch in S['children']:
-            conf = 'AFC' if 'American' in ch['name'] else 'NFC'
-            for e in ch['standings']['entries']:
-                n = e['team']['displayName']; s = {x['name']: x.get('value') for x in e['stats']}
-                if n in NFL_AB: rows.append((n, NFL_AB[n], int(s['wins']), int(s['losses']), round(float(s['winPercent']), 3), conf))
-        if len(rows) == 32:
-            bd = re.sub(r'NFL_REC = \[.*?\]\n', 'NFL_REC = [' + ',\n '.join(repr(r) for r in rows) + ']\n', bd, count=1, flags=re.S); log.append('nfl: ok')
-        else: log.append(f'nfl: solo {len(rows)} equipos, se conserva')
-        # resultados y próximos NFL
-        for k in range(-8, 8):
-            d = TODAY + dt.timedelta(days=k)
-            for e in scoreboard('football', 'nfl', d.strftime('%Y%m%d')):
-                c = e['competitions'][0]; t = {x['homeAway']: x for x in c['competitors']}
-                hn, an = t['home']['team']['displayName'], t['away']['team']['displayName']
-                if hn not in NFL_AB or an not in NFL_AB: continue
-                t0 = cdmx(e['date'])
-                if e['status']['type'].get('completed') and k <= 0:
-                    results.append(('nfl', t0.date().isoformat(), NFL_AB[hn], NFL_AB[an], int(float(t['home']['score'])), int(float(t['away']['score']))))
-                elif e['status']['type'].get('state') == 'pre' and k >= 0:
-                    upcoming.setdefault('nfl', []).append((t0.strftime('%Y-%m-%d %H:%M'), NFL_AB[hn], NFL_AB[an], None, None, None))
+        G = list(csv.DictReader(io.StringIO(get('https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', raw=True))))
+        y = TODAY.year if TODAY.month >= 6 else TODAY.year - 1
+        rec = {a: [0, 0, 0] for a in AB2N}
+        fx = lambda t: 'JAC' if t == 'JAX' else t
+        for g in G:
+            if int(g['season']) != y or g['game_type'] != 'REG': continue
+            h, a = fx(g['home_team']), fx(g['away_team'])
+            if h not in AB2N or a not in AB2N: continue
+            d = dt.date.fromisoformat(g['gameday'])
+            if g['home_score'] not in ('', 'NA'):
+                x, z = int(float(g['home_score'])), int(float(g['away_score']))
+                if x > z: rec[h][0] += 1; rec[a][1] += 1
+                elif x < z: rec[a][0] += 1; rec[h][1] += 1
+                else: rec[h][2] += 1; rec[a][2] += 1
+                if (TODAY - d).days <= 8: results.append(('nfl', d.isoformat(), h, a, x, z))
+            elif 0 <= (d - TODAY).days <= 7:
+                hh, mi = (g['gametime'] or '13:00').split(':')
+                t0 = dt.datetime(d.year, d.month, d.day, int(hh), int(mi), tzinfo=dt.timezone(dt.timedelta(hours=-5))).astimezone(MX)  # hora del Este
+                upcoming.setdefault('nfl', []).append((t0.strftime('%Y-%m-%d %H:%M'), h, a, None, None, None))
+        rows = [(AB2N[a], a, w, l, round((w + .5 * t) / max(1, w + l + t), 3), CONF.get(a, 'NFC')) for a, (w, l, t) in rec.items()]
+        if sum(w + l for _, _, w, l, _, _ in rows) > 0:
+            bd = re.sub(r'NFL_REC = \[.*?\]\n', 'NFL_REC = [' + ',\n '.join(repr(r) for r in rows) + ']\n', bd, count=1, flags=re.S); log.append('nfl: ok (nflverse)')
     except Exception as ex: log.append(f'nfl: ERROR {ex}')
+    import ast
+    try:  # las ligas que hoy fallaron conservan sus resultados y próximos partidos anteriores
+        got = {r[0] for r in results}
+        oldR = ast.literal_eval(re.search(r'RESULTS = (\[.*?\n\])\n', bd, flags=re.S).group(1))
+        results += [tuple(r) for r in oldR if r[0] not in got]
+        oldU = ast.literal_eval(re.search(r'U = (\{.*?\n\})\n', bd, flags=re.S).group(1))
+        for k, v in oldU.items():
+            if k not in upcoming: upcoming[k] = [tuple(x) for x in v]
+    except Exception as ex: log.append(f'aviso al conservar datos anteriores: {ex}')
     results = sorted(set(results), key=lambda r: (r[1], r[0]))
     for k in upcoming: upcoming[k] = sorted(set(upcoming[k]))
     if results:
@@ -170,7 +236,6 @@ def cmd_data(repo):
             nat = re.sub(r'ELO_RAW = """.*?"""', 'ELO_RAW = """' + raw + '"""', nat, count=1, flags=re.S)
             nat = re.sub(r'ELO_DATE = "[\d-]+"', f'ELO_DATE = "{TODAY.isoformat()}"', nat, count=1); log.append('elo: ok')
     except Exception as ex: log.append(f'elo: ERROR {ex}')
-    # construir y probar en una carpeta aparte; solo se guarda si TODAS las pruebas pasan
     W = tempfile.mkdtemp()
     for src, dst in [('tools/model.txt', 'model.py'), ('data.json', 'data.json'), ('tools/tests.txt', 'tests.py')]: shutil.copy(os.path.join(repo, src), os.path.join(W, dst))
     open(os.path.join(W, 'build_data.py'), 'w', encoding='utf-8').write(bd)
@@ -238,6 +303,29 @@ def g1t(k, n):
     if k == 'Más de 1.5 goles en el 1er tiempo': return 'win' if n >= 2 else 'loss'
     if k == '1er tiempo sin goles': return 'win' if n == 0 else 'loss'
     return None
+FD_LG = {'Premier League': 'E0', 'LaLiga': 'SP1', 'Serie A': 'I1', 'Bundesliga': 'D1', 'Ligue 1': 'F1'}
+def fd_h1(p, r, cache):
+    """goles al medio tiempo desde football-data.co.uk (ligas europeas)"""
+    div = FD_LG.get(p['lg'])
+    if not div: return None
+    k = ('fd', div)
+    if k not in cache:
+        try: cache[k] = fd_csv(f'/mmz4281/{season_code()[0]}/{div}.csv')
+        except Exception: cache[k] = []
+    t = dt.datetime.fromisoformat(p['t'].replace('Z', '+00:00')).date()
+    sim = lambda a, b: len(norm(a) & norm(b)) / max(1, len(norm(a) | norm(b)))
+    cands = []
+    for x in cache[k]:
+        try: d = fd_date(x['Date'])
+        except Exception: continue
+        if abs((d - t).days) > 1 or str(x.get('FTHG')) != str(r['hs']) or str(x.get('FTAG')) != str(r['as']) or x.get('HTHG', '') == '': continue
+        sc = sim(p['h'], FD_ALIAS.get(x['HomeTeam'], x['HomeTeam'])) + sim(p['a'], FD_ALIAS.get(x['AwayTeam'], x['AwayTeam']))
+        cands.append((sc, int(x['HTHG']) + int(x['HTAG'])))
+    cands.sort(reverse=True)
+    if len(cands) == 1: return cands[0][1]  # misma fecha y mismo marcador final: es ese partido
+    if cands and cands[0][0] >= 0.3 and cands[0][0] > cands[1][0]: return cands[0][1]
+    return None
+
 def cmd_h1(path):
     P = json.load(open(path)); cache = {}; n = 0
     for p in P['picks']:
@@ -256,8 +344,9 @@ def cmd_h1(path):
                 c = e['competitions'][0]; sc = {x['homeAway']: x.get('score') for x in c['competitors']}
                 if abs((te - t).total_seconds()) <= 2700 and e['status']['type'].get('completed') and str(sc.get('home')) == str(r['hs']) and str(sc.get('away')) == str(r['as']):
                     found = c
-        if found is None: continue
-        h = h1_goals(found); r['h1'] = h
+        h = h1_goals(found) if found is not None else fd_h1(p, r, cache)
+        if h is None: continue
+        r['h1'] = h
         for x in [p['key']] + p['top']:
             if x['fam'] == '1t': x['g'] = g1t(x['k'], h)
         n += 1
