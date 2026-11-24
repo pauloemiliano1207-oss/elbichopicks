@@ -1,4 +1,4 @@
-# Estadísticas por equipo (fuente: futboltotal.futbol, 24 nov 2026; partidos del 23 nov completados con resultados finales de SportRadar)
+# Estadísticas por equipo (fuente: football-data.co.uk, actualizado automáticamente el 2026-11-24)
 # Equipo | GF GC | PJ_local GF_local GC_local | PJ_visita GF_visita GC_visita | Forma (últimos 5, el más reciente al final)
 [epl]
 Arsenal|17 7|5 10 2|6 7 5|GGGGE

@@ -1,12 +1,11 @@
 == 1) Tablas, récord y Elo (ESPN + eloratings) ==
-epl: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
-laliga: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
-seriea: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
-bund: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
-ligue1: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
-ligamx: ERROR HTTP Error 403: Forbidden (se conserva lo anterior)
-nba: ERROR HTTP Error 403: Forbidden
-nfl: ERROR HTTP Error 403: Forbidden
+epl: 110 partidos (2026-11-23 el más reciente)
+laliga: 129 partidos (2026-11-23 el más reciente)
+seriea: 120 partidos (2026-11-23 el más reciente)
+bund: 90 partidos (2026-11-22 el más reciente)
+ligue1: 99 partidos (2026-11-22 el más reciente)
+ligamx: 153 partidos (2026-11-23 el más reciente)
+nfl: ok (nflverse)
 elo: ok
 data.json: actualizado y pruebas OK
 == 1b) NFL: proyecciones de jugadores (nflverse) ==
@@ -21,7 +20,7 @@ props: 16 partidos, 220 jugadores (datos hasta la semana 11)
 selecciones: 0 partidos
 {"n_signals": 98, "n_closed": 25, "clv": 0.0152, "pos": 0.68, "since": "2026-11-18T00:13:54.546Z"} 130 eventos
 153 partidos
-{"creditos_antes": 320, "creditos_restantes": "304", "ligas_sin_consulta": ["soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "ok (37 partidos, 44 consultas)", "historial": "3 jugadas nuevas, 2 calificadas (2 créditos)"}
-primer tiempo: 0 partidos calificados
+{"creditos_antes": 302, "creditos_restantes": "286", "ligas_sin_consulta": ["soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "ok (37 partidos, 44 consultas)", "historial": "0 jugadas nuevas, 0 calificadas (0 créditos)"}
+primer tiempo: 22 partidos calificados
 == 3) Revisión de seguridad ==
 OK
