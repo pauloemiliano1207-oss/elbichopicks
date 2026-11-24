@@ -111,7 +111,8 @@ def cmd_data(repo):
     for ln in stats_old.splitlines():
         if ln.startswith('['): lg = ln[1:-1]; old[lg] = []; continue
         if lg and ln.strip() and not ln.startswith('#'): old[lg].append(ln)
-    out = [f'# Estadísticas por equipo (fuente: ESPN, actualizado automáticamente el {TODAY.isoformat()})',
+    hdr = [l for l in stats_old.splitlines() if l.startswith('#')][:1]
+    out = [f'# Estadísticas por equipo (fuente: ESPN, actualizado automáticamente el {TODAY.isoformat()})' if new_stats else (hdr[0] if hdr else '#'),
            '# Equipo | GF GC | PJ_local GF_local GC_local | PJ_visita GF_visita GC_visita | Forma (últimos 5, el más reciente al final)']
     for key in LEAGUES:
         out.append(f'[{key}]')
@@ -160,7 +161,7 @@ def cmd_data(repo):
         bd = re.sub(r'RESULTS = \[.*?\n\]\n', 'RESULTS = [\n' + ''.join(f' {r!r},\n' for r in results) + ']\n', bd, count=1, flags=re.S)
     if upcoming:
         bd = re.sub(r'U = \{.*?\n\}\n', 'U = {\n' + ''.join(f' {k!r}:{v!r},\n' for k, v in upcoming.items()) + '}\n', bd, count=1, flags=re.S)
-    bd = re.sub(r'UPDATED = "[\d-]+"', f'UPDATED = "{TODAY.isoformat()}"', bd, count=1)
+    if new_stats or results: bd = re.sub(r'UPDATED = "[\d-]+"', f'UPDATED = "{TODAY.isoformat()}"', bd, count=1)
     # Elo de selecciones
     try:
         rows = [l.split('\t') for l in get('https://www.eloratings.net/World.tsv', raw=True).strip().splitlines()]
