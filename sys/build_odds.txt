@@ -6,7 +6,7 @@ Uso: python3 bicho_build_odds.py <carpeta_con_snapshots> <bicho_senales.json> <s
   se actualiza la cuota justa de Pinnacle 'última vista' (aproximación a la cuota de cierre).
 - CLV = cuota de la señal / cuota justa de cierre - 1. Si es positivo de forma sostenida, hay ventaja real."""
 import json,sys,glob,os,datetime as dt
-SN={'soccer_epl':'Premier League','soccer_spain_la_liga':'LaLiga','soccer_italy_serie_a':'Serie A','soccer_germany_bundesliga':'Bundesliga','soccer_france_ligue_one':'Ligue 1','soccer_mexico_ligamx':'Liga MX','soccer_uefa_champs_league':'Champions League','basketball_nba':'NBA','americanfootball_nfl':'NFL'}
+SN={'soccer_epl':'Premier League','soccer_spain_la_liga':'LaLiga','soccer_italy_serie_a':'Serie A','soccer_germany_bundesliga':'Bundesliga','soccer_france_ligue_one':'Ligue 1','soccer_mexico_ligamx':'Liga MX','soccer_uefa_champs_league':'Champions League','basketball_nba':'NBA','americanfootball_nfl':'NFL','soccer_uefa_nations_league':'UEFA Nations League'}
 EXCH={'betfair_ex_eu','matchbook','betfair_ex_uk'}
 snapdir,sigf,outf=sys.argv[1:4]
 snaps=sorted(glob.glob(os.path.join(snapdir,'bicho_cuotas_*.json')))

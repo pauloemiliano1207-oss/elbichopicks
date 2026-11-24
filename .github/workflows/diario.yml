@@ -1,0 +1,27 @@
+name: Actualización diaria
+on:
+  schedule:
+    - cron: '40 11 * * *'   # 5:40 a.m. hora de CDMX (GitHub puede tardar unos minutos)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency: diario
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Actualizar datos
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: bash tools/diario.sh
+      - name: Publicar
+        run: |
+          git config user.name "El Bicho Picks"
+          git config user.email "bot@elbichopicks.pages.dev"
+          git add -A
+          if git diff --cached --quiet; then echo "Sin cambios"; exit 0; fi
+          git commit -m "Datos del día $(TZ=America/Mexico_City date +%F)"
+          git push || (git pull --rebase && git push)

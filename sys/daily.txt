@@ -9,7 +9,7 @@ def get(url,timeout=60):
         return json.loads(r.read().decode()),dict(r.headers)
 log={}
 # A) cuotas (16 créditos)
-SP={'soccer_epl':'h2h,totals','soccer_spain_la_liga':'h2h,totals','soccer_italy_serie_a':'h2h,totals','soccer_germany_bundesliga':'h2h,totals','soccer_mexico_ligamx':'h2h,totals','basketball_nba':'h2h,totals','americanfootball_nfl':'h2h,totals','soccer_france_ligue_one':'h2h','soccer_uefa_champs_league':'h2h'}
+SP={'soccer_epl':'h2h,totals','soccer_spain_la_liga':'h2h,totals','soccer_italy_serie_a':'h2h,totals','soccer_germany_bundesliga':'h2h,totals','soccer_mexico_ligamx':'h2h,totals','basketball_nba':'h2h,totals','americanfootball_nfl':'h2h,totals','soccer_france_ligue_one':'h2h','soccer_uefa_champs_league':'h2h','soccer_uefa_nations_league':'h2h,totals'}
 try:
     j,h=get(f'https://api.the-odds-api.com/v4/sports?apiKey={K}');rem=int(h.get('x-requests-remaining',h.get('X-Requests-Remaining','999')))
     log['creditos_antes']=rem

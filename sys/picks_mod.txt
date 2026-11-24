@@ -2,7 +2,7 @@
 log_picks: guarda la jugada clave y el top 3 de cada partido que empieza en las próximas 36 h (una sola vez, antes del partido).
 resolve: califica con el marcador final de The Odds API (/scores, 2 créditos por deporte con daysFrom=3)."""
 import json,re,datetime as dt,urllib.request
-SK={'Premier League':'soccer_epl','LaLiga':'soccer_spain_la_liga','Serie A':'soccer_italy_serie_a','Bundesliga':'soccer_germany_bundesliga','Ligue 1':'soccer_france_ligue_one','Liga MX':'soccer_mexico_ligamx','Champions League':'soccer_uefa_champs_league','NBA':'basketball_nba','NFL':'americanfootball_nfl'}
+SK={'Premier League':'soccer_epl','LaLiga':'soccer_spain_la_liga','Serie A':'soccer_italy_serie_a','Bundesliga':'soccer_germany_bundesliga','Ligue 1':'soccer_france_ligue_one','Liga MX':'soccer_mexico_ligamx','Champions League':'soccer_uefa_champs_league','NBA':'basketball_nba','NFL':'americanfootball_nfl','UEFA Nations League':'soccer_uefa_nations_league'}
 def _now():return dt.datetime.now(dt.timezone.utc)
 def _iso(t):return dt.datetime.fromisoformat(t.replace('Z','+00:00'))
 def log_picks(today,P,hours=36):
