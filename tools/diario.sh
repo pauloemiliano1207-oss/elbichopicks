@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # El Bicho Picks · actualización diaria automática (GitHub Actions). No contiene claves: llegan como variables secretas.
+# Prueba con claves: 2026-11-24
 set -u
 cd "$(dirname "$0")/.."
 R=$(pwd); W=$(mktemp -d)
