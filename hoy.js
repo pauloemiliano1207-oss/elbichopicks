@@ -50,13 +50,37 @@ const short2=s=>s.length>14?s.split(' ').slice(-1)[0]:s;
 /* ---------- FICHA DEL PARTIDO ---------- */
 let FTAB='top';
 function openFicha(id){const e=TD.events.find(x=>x.id===id);if(!e)return;FTAB='top';drawFicha(e);$('fichaModal').classList.add('on');}
+
+/* ---------- NFL: proyecciones de jugadores (props.json, modelo propio con nflverse) ---------- */
+let PROPS=null,PROPSL=false;
+const NFLAB={'Arizona Cardinals':'ARI','Atlanta Falcons':'ATL','Baltimore Ravens':'BAL','Buffalo Bills':'BUF','Carolina Panthers':'CAR','Chicago Bears':'CHI','Cincinnati Bengals':'CIN','Cleveland Browns':'CLE','Dallas Cowboys':'DAL','Denver Broncos':'DEN','Detroit Lions':'DET','Green Bay Packers':'GB','Houston Texans':'HOU','Indianapolis Colts':'IND','Jacksonville Jaguars':'JAX','Kansas City Chiefs':'KC','Las Vegas Raiders':'LV','Los Angeles Chargers':'LAC','Los Angeles Rams':'LA','Miami Dolphins':'MIA','Minnesota Vikings':'MIN','New England Patriots':'NE','New Orleans Saints':'NO','New York Giants':'NYG','New York Jets':'NYJ','Philadelphia Eagles':'PHI','Pittsburgh Steelers':'PIT','San Francisco 49ers':'SF','Seattle Seahawks':'SEA','Tampa Bay Buccaneers':'TB','Tennessee Titans':'TEN','Washington Commanders':'WAS'};
+const POSN={QB:'Mariscal',RB:'Corredor',WR:'Receptor',TE:'Ala cerrada'};
+function loadProps(cb){if(PROPS||PROPSL)return cb&&cb();PROPSL=true;fetch('props.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{PROPS=j;cb&&cb();}).catch(()=>{PROPS={games:[]};cb&&cb();});}
+function propsGame(e){if(!PROPS||e.sp!=='nfl')return null;const h=NFLAB[e.h],a=NFLAB[e.a];return PROPS.games.find(g=>g.h===h&&g.a===a)||PROPS.games.find(g=>g.h===a&&g.a===h)||null;}
+function pOverP(s,mu,L){if(PROPS.pois.includes(s)){let c=0;for(let i=0;i<=Math.floor(L);i++){let f=1;for(let j=2;j<=i;j++)f*=j;c+=Math.exp(-mu)*mu**i/f;}return Math.min(.995,Math.max(.005,1-c));}
+  const q=PROPS.q[s],r=L/mu;if(r<=q[0])return .995;if(r>=q[100])return .005;let lo=0;while(lo<100&&q[lo+1]<=r)lo++;const fr=q[lo+1]>q[lo]?(r-q[lo])/(q[lo+1]-q[lo]):0;return Math.min(.995,Math.max(.005,1-(lo+fr)/100));}
+const UNI={pass_yds:'yds',rush_yds:'yds',rec_yds:'yds',rec:'rec.',pass_td:'TD'};
+function propsHTML(e,g){
+  const tm=t=>Object.keys(NFLAB).find(k=>NFLAB[k]===t)||t;
+  const card=p=>`<div class="ppl"><div class="ppn"><b>${esc(p.n)}</b><span>${POSN[p.pos]||p.pos}</span></div>${p.m.map(m=>m.s==='any_td'?`<div class="ppm"><span>Anota touchdown</span><b class="pc">${p0(m.p)}</b></div>`:
+    `<div class="ppm"><span>${esc(m.lab[0].toUpperCase()+m.lab.slice(1))}</span><b>${m.mu}</b><i class="fn">rango ${m.r[0]}–${m.r[1]}</i>${m.safe?`<em class="pch">Más de ${m.safe.L} · <b>${p0(m.safe.p)}</b></em>`:''}</div>`).join('')}</div>`;
+  const sel=[];g.players.forEach((p,i)=>p.m.forEach((m,j)=>{if(m.s!=='any_td')sel.push(`<option value="${i}|${j}">${esc(p.n)} · ${esc(m.lab)} (proy. ${m.mu})</option>`);}));
+  const v=PROPS.val||{},vs=['pass_yds','rush_yds','rec_yds','rec'].map(k=>v[k]&&v[k].segura).filter(Boolean),hit=vs.length?Math.round(100*vs.reduce((a,x)=>a+x.acierto*x.n,0)/vs.reduce((a,x)=>a+x.n,0)):null;
+  return `${[g.h,g.a].map(t=>`<h4 class="pph">${esc(tm(t))}</h4><div class="ppg">${g.players.filter(p=>p.team===t).map(card).join('')}</div>`).join('')}
+   <div class="pcalc"><b>🧮 ¿Qué línea te da tu casa?</b><div class="pcr"><select id="pcS">${sel.join('')}</select><input id="pcL" type="number" step="0.5" placeholder="Ej. 210.5"><span id="pcO" class="pco">—</span></div></div>
+   <p class="note">Proyección = lo más probable según su temporada (los partidos recientes pesan más), la defensa rival contra su posición, los puntos que se esperan de su equipo (línea ${esc(g.spread)} · total ${esc(g.total)}) y si juega de local. “Más de X” es la línea más alta que el modelo da con al menos 70%.${hit?` Probado con ${esc(PROPS.vperiod||'')}: esas líneas acertaron <b>${hit}%</b> de las veces.`:''} Datos de nflverse hasta la semana ${PROPS.data_week}; no considera lesiones de última hora.</p>`;}
+function bindProps(g){const S=$('pcS'),L=$('pcL'),O=$('pcO');if(!S)return;const go=()=>{const[i,j]=S.value.split('|').map(Number),m=g.players[i].m[j],x=parseFloat(L.value);if(!isFinite(x)){O.textContent='—';return;}const p=pOverP(m.s,m.mu,x);O.innerHTML=`Más de ${x}: <b>${p0(p)}</b> · Menos: <b>${p0(1-p)}</b>`;};S.onchange=go;L.oninput=go;}
+
 function drawFicha(e){
-  const tabs=[['top','⭐ Top 3'],['res','Resultado'],['tot',e.sp==='fut'?'Goles':'Puntos'],...(e.sp==='fut'?[['mas','Más mercados'],['sc','Marcadores']]:[['hc','Hándicaps']])];
+  if(e.sp==='nfl'&&!PROPS){loadProps(()=>drawFicha(e));}
+  const pg=propsGame(e);
+  const tabs=[['top','⭐ Top 3'],...(pg?[['jug','🏈 Jugadores']]:[]),['res','Resultado'],['tot',e.sp==='fut'?'Goles':'Puntos'],...(e.sp==='fut'?[['mas','Más mercados'],['sc','Marcadores']]:[['hc','Hándicaps']])];
   const row=x=>`<tr><td>${esc(x.k)}</td><td class="pb"><span class="hbt"><i style="width:${Math.round(x.p*100)}%"></i></span><b>${p0(x.p)}</b></td><td class="n num">${x.fair}</td><td class="n num">${x.odd?x.odd.toFixed(2)+'<div class="fn">'+esc(BKN(x.book))+'</div>':'—'}</td><td class="n">${evTxt(x)}</td><td><button class="share" data-leg="${esc(x.k)}">+</button></td></tr>`;
   const tbl=xs=>`<div style="overflow-x:auto"><table class="ftab ftk"><thead><tr><th>Mercado</th><th>Probabilidad</th><th class="n">Cuota justa</th><th class="n">Mejor cuota</th><th class="n">Ventaja</th><th></th></tr></thead><tbody>${xs.map(row).join('')}</tbody></table></div>`;
   let body='';
   if(FTAB==='top'){body=e.top.length?e.top.map((x,i)=>{const[rk,rc]=riskOf(x.p);return`<div class="top3"><div class="medal">${['🥇','🥈','🥉'][i]}</div><div style="flex:1"><div class="kk">${esc(x.k)}</div><div class="fn">${FAMN[x.fam]} · cuota justa ${x.fair}${x.odd?` · mejor cuota ${x.odd.toFixed(2)} (${esc(BKN(x.book))})`:''}</div></div><div class="tp"><b>${p0(x.p)}</b><span class="rk ${rc}">Riesgo ${rk.toLowerCase()}</span>${x.ev!=null&&x.ev<0?'<span class="fn">No conviene a esa cuota</span>':''}</div><button class="share" data-leg="${esc(x.k)}">+ Parlay</button></div>`;}).join(''):'<p class="note">No hay mercados con suficiente probabilidad.</p>';
     body+=`<p class="note">Las 3 jugadas más probables de este partido (una por tipo de mercado, entre 55% y 90%). Que sean probables no significa que sean rentables: si la cuota de tu casa es menor que la cuota justa, a la larga pierdes.${e.top.length>1?' Ojo: dependen del mismo partido, no se cubren entre sí.':''}</p>`;}
+  else if(FTAB==='jug'&&pg)body=propsHTML(e,pg);
   else if(FTAB==='res')body=tbl(e.m.filter(x=>['res','dc','dnb'].includes(x.fam)));
   else if(FTAB==='tot')body=tbl(e.m.filter(x=>x.fam==='tot'));
   else if(FTAB==='hc')body=tbl(e.m.filter(x=>x.fam==='hc'))+`<p class="note">Hándicaps calculados a partir del ganador (Pinnacle), suponiendo una variación típica del margen. Son estimaciones del modelo: verifica que tu casa ofrezca esa línea.</p>`;
@@ -68,6 +92,7 @@ function drawFicha(e){
    ${typeof SAMPLE!=='undefined'&&SAMPLE?`<div style="margin-top:14px"><button class="btn menta" id="fAi">🧠 Análisis experto de este partido</button><div id="fAiBox" class="note" style="margin-top:10px"></div></div>`:''}
    <p class="note" style="margin-top:12px">“Ventaja” = cuánto ganarías a la larga por cada $100 a la mejor cuota, si nuestra probabilidad fuera exacta. Compara siempre con la cuota de tu casa.</p>`;
   if($('fAi'))$('fAi').onclick=()=>expertAI(e);
+  if(FTAB==='jug'&&pg)bindProps(pg);
   $('fichaBody').querySelectorAll('[data-ft]').forEach(b=>b.onclick=()=>{FTAB=b.dataset.ft;drawFicha(e);});
   $('fichaBody').querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>{const x=e.m.find(y=>y.k===b.dataset.leg);addLeg(e,x);});
 }
