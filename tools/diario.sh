@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # El Bicho Picks · actualización diaria automática (GitHub Actions). No contiene claves: llegan como variables secretas.
-# Prueba con claves: 2026-11-24
 set -u
 cd "$(dirname "$0")/.."
 R=$(pwd); W=$(mktemp -d)
-echo "== 1) Tablas, récord y Elo (ESPN + eloratings) =="
+echo "== 1) Tablas, récord y Elo (football-data.co.uk, nflverse, The Odds API, eloratings) =="
+python3 tools/auto.py nba "$R" || true
 python3 tools/auto.py data "$R" || echo "AVISO: data.json se queda como estaba"
 echo "== 1b) NFL: proyecciones de jugadores (nflverse) =="
 N=$(mktemp -d); Y=$(TZ=America/Mexico_City date +%Y); M=$(TZ=America/Mexico_City date +%m); [ "$M" -lt 8 ] && Y=$((Y-1))

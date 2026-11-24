@@ -66,7 +66,7 @@ FD_ALIAS = {
  'Paris SG': 'PSG', 'Paris FC': 'Paris FC', 'St Etienne': 'Saint-Étienne',
  'Club America': 'América', 'America': 'América', 'Atl. San Luis': 'Atlético San Luis', 'San Luis': 'Atlético San Luis', 'Guadalajara Chivas': 'Guadalajara',
  'Chivas': 'Guadalajara', 'U.N.A.M.- Pumas': 'Pumas', 'UNAM': 'Pumas', 'Pumas UNAM': 'Pumas', 'U.A.N.L.- Tigres': 'Tigres', 'Tigres UANL': 'Tigres',
- 'Club Tijuana': 'Tijuana', 'Queretaro': 'Querétaro', 'Leon': 'León', 'Juarez': 'Juárez', 'FC Juarez': 'Juárez', 'Santos': 'Santos Laguna', 'Mazatlan FC': 'Mazatlán',
+ 'Club Tijuana': 'Tijuana', 'Los Angeles Clippers': 'LA Clippers', 'Queretaro': 'Querétaro', 'Leon': 'León', 'Juarez': 'Juárez', 'FC Juarez': 'Juárez', 'Santos': 'Santos Laguna', 'Mazatlan FC': 'Mazatlán',
 }
 STOP = {'fc', 'cf', 'ac', 'afc', 'sc', 'sv', 'tsg', 'club', 'de', 'and', 'hove', 'albion', 'calcio', 'ssc', 'as', 'us', 'ogc', 'rc', 'stade', 'olympique', 'vfb', 'vfl', '1', 'bc', 'cd', 'ud', 'rcd', 'ca', 'deportivo'}
 def norm(x):
@@ -353,8 +353,37 @@ def cmd_h1(path):
     json.dump(P, open(path, 'w'), ensure_ascii=False)
     print(f'primer tiempo: {n} partidos calificados')
 
+
+# =====================================================================================
+def cmd_nba(repo):
+    """Suma al récord de la NBA los partidos terminados que aún no se contaron (The Odds API /scores, 2 créditos, cada 3 días)."""
+    K = os.environ.get('ODDS_API_KEY', '')
+    if not K: print('nba: sin clave'); return
+    if TODAY.toordinal() % 3: print('nba: hoy no toca (cada 3 días)'); return
+    bd_p = os.path.join(repo, 'tools/build_data.txt'); bd = open(bd_p, encoding='utf-8').read()
+    seen_p = os.path.join(repo, 'sys/nba_seen.json'); seen = set(json.load(open(seen_p))) if os.path.exists(seen_p) else None
+    import ast
+    rec = ast.literal_eval(re.search(r'NBA_REC = (\[.*?\])\n', bd, flags=re.S).group(1))
+    f = matcher([r[0] for r in rec])
+    G = get(f'https://api.the-odds-api.com/v4/sports/basketball_nba/scores?apiKey={K}&daysFrom=3')
+    done = [g for g in G if g.get('completed') and g.get('scores')]
+    if seen is None:  # primera vez: solo se marcan como vistos (el récord actual ya los incluye)
+        json.dump(sorted(g['id'] for g in done), open(seen_p, 'w')); print(f'nba: inicio, {len(done)} partidos marcados'); return
+    R = {r[0]: list(r) for r in rec}; n = 0
+    for g in done:
+        if g['id'] in seen: continue
+        sc = {x['name']: int(float(x['score'])) for x in g['scores']}
+        h, a = f(g['home_team']), f(g['away_team'])
+        if not h or not a or g['home_team'] not in sc or g['away_team'] not in sc: continue
+        win, los = (h, a) if sc[g['home_team']] > sc[g['away_team']] else (a, h)
+        R[win][1] += 1; R[los][2] += 1; seen.add(g['id']); n += 1
+    bd = re.sub(r'NBA_REC = \[.*?\]\n', 'NBA_REC = ' + repr([tuple(R[r[0]]) for r in rec]) + '\n', bd, count=1, flags=re.S)
+    open(bd_p, 'w', encoding='utf-8').write(bd); json.dump(sorted(seen)[-400:], open(seen_p, 'w'))
+    print(f'nba: {n} partidos nuevos sumados al récord')
+
 if __name__ == '__main__':
     c = sys.argv[1]
     if c == 'data': sys.exit(0 if cmd_data(sys.argv[2]) else 1)
     if c == 'extra': cmd_extra(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else '.')
     if c == 'h1': cmd_h1(sys.argv[2])
+    if c == 'nba': cmd_nba(sys.argv[2])
