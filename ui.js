@@ -118,7 +118,7 @@ function renderRec(){const el=$('recBox');if(!el)return;
     const since=JK.picks.length?new Date(JK.picks.map(p=>p.made).sort()[0]).toLocaleDateString('es-MX',{day:'numeric',month:'long'}):'';
     const sp=[['fut','⚽ Fútbol'],['nba','🏀 NBA'],['nfl','🏈 NFL']].map(([k,l])=>{const x=P.filter(p=>p.sp===k),ww=x.filter(p=>p.key.g==='win').length;return x.length?{l,n:x.length,w:ww,a:ww/x.length}:null;}).filter(Boolean);
     const days=[...Array(14)].map((_,i)=>{const d0=dayStart(-13+i),d1=d0+864e5,x=P.filter(p=>{const t=new Date(p.t).getTime();return t>=d0&&t<d1;}),ww=x.filter(p=>p.key.g==='win').length;return{d:new Date(d0),n:x.length,w:ww,a:x.length?ww/x.length:null};});
-    const T=BTJ.replay_total,F=BTJ.replay,N=BTJ.replay_nfl,B=BTJ.replay_nba,M=BTJ.montecarlo;
+    const T=BTJ.replay_total,F=BTJ.replay_fut_max||BTJ.replay,N=BTJ.replay_nfl,B=BTJ.replay_nba,M=BTJ.montecarlo;
     const last=JK.picks.slice().sort((a,b)=>a.t<b.t?1:-1).filter(p=>p.res&&!p.res.void&&['win','loss','push'].includes(p.key.g)).slice(0,12);
     const bar=(l,a,n,extra)=>`<div class="rbar"><span class="rl">${l}</span><span class="rt"><i style="width:${Math.round(a*100)}%" class="${rc(a)}"></i></span><b>${Math.round(a*100)}%</b><small>${extra||''}</small></div>`;
     el.innerHTML=`
@@ -128,18 +128,18 @@ function renderRec(){const el=$('recBox');if(!el)return;
       <div class="legend"><span><i class="dot g"></i>75%+</span><span><i class="dot m"></i>60–75%</span><span><i class="dot h"></i>menos</span></div></div>
     <div class="rsec"><div class="rsec-t">Probado con <b data-cu="${T.partidos}">${T.partidos.toLocaleString('es-MX')}</b> partidos reales</div>
       <div class="rgrid">
-        <div class="rc"><span>⚽ Fútbol</span><b class="g" data-cu="${(F.jugada_clave.acc*100).toFixed(1)}" data-suf="%">${(F.jugada_clave.acc*100).toFixed(1)}%</b><small>${F.partidos.toLocaleString('es-MX')} partidos · 2021–2026</small></div>
+        <div class="rc"><span>⚽ Fútbol</span><b class="g" data-cu="${(F.jugada_clave.acc*100).toFixed(1)}" data-suf="%">${(F.jugada_clave.acc*100).toFixed(1)}%</b><small>${F.partidos.toLocaleString('es-MX')} partidos · ${F.ligas||8} ligas · 2012–2026</small></div>
         <div class="rc"><span>🏀 NBA</span><b class="g" data-cu="${(B.jugada_clave.acc*100).toFixed(1)}" data-suf="%">${(B.jugada_clave.acc*100).toFixed(1)}%</b><small>${B.partidos.toLocaleString('es-MX')} partidos · 2009–2025</small></div>
         <div class="rc"><span>🏈 NFL</span><b class="g" data-cu="${(N.jugada_clave.acc*100).toFixed(1)}" data-suf="%">${(N.jugada_clave.acc*100).toFixed(1)}%</b><small>${N.partidos.toLocaleString('es-MX')} partidos · 1999–2026</small></div>
       </div>
       <div class="rtot"><span>Jugada clave <b>${Math.round(T.clave.acc*100)}%</b></span><span>Jugada más segura <b>${Math.round(T.top1.acc*100)}%</b></span><span>Riesgo bajo <b>${Math.round(M.acierto_bajo*100)}%</b></span></div>
       <p class="note small">Simulamos cada partido con las cuotas de cierre y comparamos con el marcador final.</p></div>
-    ${M?`<div class="rsec"><div class="rsec-t"><b data-cu="${M.jugadas}">${M.jugadas.toLocaleString('es-MX')}</b> jugadas simuladas (NFL y NBA)</div>
+    ${M?`<div class="rsec"><div class="rsec-t"><b data-cu="${M.jugadas}">${M.jugadas.toLocaleString('es-MX')}</b> jugadas simuladas (${M.deportes||'NFL y NBA'})</div>
       <div class="rgrid">
         <div class="rc"><b data-cu="${Math.round(M['semanas_6+']*100)}" data-suf="%">${Math.round(M['semanas_6+']*100)}%</b><small>de las semanas de 10 jugadas aciertas <b>6 o más</b></small></div>
         <div class="rc"><b data-cu="${Math.round(M['semanas_7+']*100)}" data-suf="%">${Math.round(M['semanas_7+']*100)}%</b><small>de las semanas aciertas <b>7 o más</b></small></div>
         <div class="rc"><b data-cu="${Math.round(M.parlay3_bajo*100)}" data-suf="%">${Math.round(M.parlay3_bajo*100)}%</b><small>salen los parlays de <b>3 jugadas de riesgo bajo</b></small></div>
-      </div><p class="note small">Simulación con el acierto real de 26,505 partidos de NFL y NBA. Ninguna jugada es segura y acertar no garantiza ganancias · +18.</p></div>`:''}
+      </div><p class="note small">Simulación con el acierto real de ${(M.base||26505).toLocaleString('es-MX')} partidos, por nivel de riesgo. Ninguna jugada es segura y acertar no garantiza ganancias · +18.</p></div>`:''}
     <div class="rsec"><div class="rsec-t">Últimas jugadas</div><div class="mlist">${last.map(p=>{const g=p.key.g,res=p.res;return`<div class="mrow"><span class="mt">${new Date(p.t).toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</span><span class="mteams"><b><span class="tn">${esc(p.key.k)}</span></b><small class="fn">${esc(p.h)} vs ${esc(p.a)}${res&&!res.void?` · ${res.hs}-${res.as}`:''}</small></span><span class="mk">${g==='win'?'<span class="gmk w">✓</span>':g==='loss'?'<span class="gmk l">✗</span>':'<span class="pill h">pendiente</span>'}</span></div>`;}).join('')}</div></div>
     <button class="nb" id="recTech" style="width:100%;margin-top:14px;padding:12px">${document.body.classList.contains('rec-tech')?'Ocultar':'Ver'} detalles técnicos</button>`;
     countUp(el);
