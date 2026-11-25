@@ -1,0 +1,18 @@
+name: Laboratorio del modelo
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ['research/job.sh', 'research/*.py']
+permissions:
+  contents: write
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash research/job.sh
+      - run: |
+          git config user.name "El Bicho Picks"; git config user.email "bot@elbichopicks.pages.dev"
+          git add research/out; git diff --cached --quiet || (git commit -m "Laboratorio: resultados" && (git push || (git pull --rebase && git push)))
