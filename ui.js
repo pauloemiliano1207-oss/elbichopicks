@@ -30,12 +30,12 @@ window.renderHoy=function(){const el=$('hoyBox');if(!el)return;loadToday(()=>{
   const groups=[];const gi={};list.forEach(e=>{if(!(e.lg in gi)){gi[e.lg]=groups.length;groups.push({lg:e.lg,sp:e.sp,xs:[]});}groups[gi[e.lg]].xs.push(e);});
   const best=bestOf(list);
   const h2=document.querySelector('#hoy h2');if(h2){const dd=days[HDAY];h2.innerHTML=HDAY===0?'Partidos de <em>hoy</em>':HDAY===1?'Partidos de <em>mañana</em>':`Partidos del <em>${dd.l.toLowerCase()} ${dd.n}</em>`;}
-  const V=window.VIVO;
+  const V=window.VIVO;let RI=0;
   const tcell=e=>{const s=V&&V.rowState(e);if(s&&s.st==='in')return`<span class="mt live"><i class="ldot"></i>${esc((s.det||'').replace('Halftime','Medio t.').replace('End of ','Fin ').replace(' - ',' '))}</span>`;if(s&&s.st==='post')return`<span class="mt fin">Final</span>`;return`<span class="mt">${tm(e.t)}</span>`;};
   const tn=(e,side)=>{const n=side?e.a:e.h,s=V&&V.rowState(e);return`<b>${V?V.badge(n):''}<span class="tn">${esc(n)}</span>${s&&s.st!=='pre'?`<em class="sc ${s.st}">${side?s.as:s.hs}</em>`:''}</b>`;};
   const mark=e=>{const s=V&&V.rowState(e);if(!s||s.st!=='post'||!e.key)return'';const g=V.grade(e.key.k,e.h,e.a,s.hs,s.as,s);return g==='win'?'<span class="gmk w">✓</span>':g==='loss'?'<span class="gmk l">✗</span>':g==='push'?'<span class="gmk p">=</span>':'';};
   const row=e=>e.pending?`<div class="mrow pend">${tcell(e)}<span class="mteams">${tn(e,0)}${tn(e,1)}</span><span class="mk"><span class="mkk muted">Sin cuotas aún</span></span></div>`
-    :`<div class="mrow ${(V&&V.rowState(e)||{}).st==='in'?'is-live':''}" data-fi="${e.id}" role="button" tabindex="0">${tcell(e)}<span class="mteams">${tn(e,0)}${tn(e,1)}</span><span class="mk"><span class="mkk">${esc(e.key.k)}</span><span>${mark(e)}${pill(e.key.p)}</span></span><button class="madd" data-padd="${e.id}" aria-label="Agregar al parlay">+</button></div>`;
+    :`<div class="mrow ${(V&&V.rowState(e)||{}).st==='in'?'is-live':''}" style="--i:${Math.min(RI++,14)}" data-fi="${e.id}" role="button" tabindex="0">${tcell(e)}<span class="mteams">${tn(e,0)}${tn(e,1)}</span><span class="mk"><span class="mkk">${esc(e.key.k)}</span><span>${mark(e)}${pill(e.key.p)}</span></span><button class="madd" data-padd="${e.id}" aria-label="Agregar al parlay">+</button></div>`;
   el.innerHTML=`<div class="dstrip">${days.map(d=>`<button class="dchip ${HDAY===d.o?'on':''} ${d.c?'':'empty'}" data-hd="${d.o}"><span>${d.l}</span><b>${d.n}</b>${d.c?`<i>${d.c}</i>`:''}</button>`).join('')}</div>
    <div class="schips">${[['all','Todo'],['fut','⚽ Fútbol'],['nba','🏀 NBA'],['nfl','🏈 NFL']].map(([k,l])=>`<button class="schip ${HSP===k?'on':''}" data-hs="${k}">${l}<i>${sc(k)}</i></button>`).join('')}</div>
    ${best?pickCard(best,HDAY===0?'Pick del día':'Pick más probable'):''}
@@ -65,7 +65,7 @@ function renderHome(){const el=$('homeBox');if(!el)return;loadToday(()=>{
      <button class="bigcta" id="homeHoy">Ver los ${today.length} partidos ${o===0?'de hoy':'próximos'} <span>›</span></button>`;
     bind(el);
     if($('homeHoy'))$('homeHoy').onclick=()=>{HDAY=o;showView('hoy');renderHoy();};
-    if($('podGo'))$('podGo').onclick=()=>{PAR=[];legs.forEach(l=>PAR.push({e:l.e,x:l.x}));showView('parlays');renderParlay();};
+    if($('podGo'))$('podGo').onclick=()=>{window.PAR_USER=true;PAR=[];legs.forEach(l=>PAR.push({e:l.e,x:l.x}));showView('parlays');renderParlay();};
   };
   if(typeof JK!=='undefined'&&!JK)fetch('sys/picks.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(!JK)JK=j;go();}).catch(go);else go();
 });}
@@ -92,15 +92,67 @@ sync(document.body.dataset.view);
 
 /* ---------- Boleto flotante del parlay ---------- */
 const tkt=document.createElement('button');tkt.id='ticket';tkt.type='button';document.body.appendChild(tkt);
-let lastN=0;
+let lastN=0;window.PAR_USER=false;
 function updTicket(){const n=(typeof PAR!=='undefined'&&PAR)?PAR.length:0,v=document.body.dataset.view;
-  if(!n||v==='parlays'){tkt.classList.remove('on');lastN=n;return;}
+  if(!n||!window.PAR_USER||v==='parlays'){tkt.classList.remove('on');lastN=n;return;}
   const p=PAR.reduce((a,l)=>a*l.x.p,1),f=1/p;
-  tkt.innerHTML=`<span class="tk-i">🎟️</span><span class="tk-t"><b>${n} pierna${n>1?'s':''}</b><small>${(p*100).toFixed(p<.1?1:0)}% de que salga · cuota justa ${f<1000?f.toFixed(2):Math.round(f)}</small></span><span class="tk-go">Ver ›</span>`;
+  tkt.innerHTML=`<span class="tk-i">🎟️</span><span class="tk-t"><b>${n} pierna${n>1?'s':''}</b><small>${(p*100).toFixed(p<.1?1:0)}% de que salga · cuota justa ${f<1000?f.toFixed(2):Math.round(f)}</small></span><span class="tk-go">Ver ›</span><span class="tk-x" role="button" aria-label="Borrar parlay" title="Borrar parlay">×</span>`;
+  tkt.querySelector('.tk-x').onclick=ev=>{ev.stopPropagation();PAR=[];window.PAR_USER=false;tkt.classList.remove('on');lastN=0;if(typeof renderParlay==='function')renderParlay();toast('Parlay borrado');};
   tkt.classList.add('on');if(n!==lastN){tkt.classList.remove('bump');void tkt.offsetWidth;tkt.classList.add('bump');if(n>lastN&&navigator.vibrate)try{navigator.vibrate(12);}catch(_){}}lastN=n;}
 tkt.onclick=()=>showView('parlays');
+if(typeof addLeg==='function'){const _al=window.addLeg;window.addLeg=function(){if(!window.PAR_USER)PAR=[];window.PAR_USER=true;return _al.apply(this,arguments);};}
+if(typeof genParlay==='function'){const _gp=window.genParlay;window.genParlay=function(){if(document.body.dataset.view==='parlays')window.PAR_USER=true;return _gp.apply(this,arguments);};}
 if(typeof renderParlay==='function'){const _rp=window.renderParlay;window.renderParlay=function(){const r=_rp.apply(this,arguments);setTimeout(updTicket,0);return r;};}
-const _sv2=window.showView;window.showView=function(v,o){_sv2(v,o);updTicket();};
+const _sv2=window.showView;window.showView=function(v,o){_sv2(v,o);updTicket();animView(document.body.dataset.view);if(document.body.dataset.view==='record')renderRec();};
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function animView(v){if(RM)return;let i=0;document.querySelectorAll('#app > [data-v="'+v+'"]').forEach(el=>{if(el.style.display==='none')return;el.classList.remove('vin');void el.offsetWidth;el.style.animationDelay=Math.min(i++,6)*45+'ms';el.classList.add('vin');});}
+function countUp(root){if(RM)return;root.querySelectorAll('[data-cu]').forEach(el=>{const end=+el.dataset.cu,suf=el.dataset.suf||'',t0=performance.now(),d=900;
+  const f=t=>{const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3),v=end*e;el.textContent=(end>=1000?Math.round(v).toLocaleString('es-MX'):(Number.isInteger(end)?Math.round(v):v.toFixed(1)))+suf;if(k<1)requestAnimationFrame(f);};requestAnimationFrame(f);});}
+window.countUp=countUp;
+
+/* ---------- RÉCORD fácil de entender ---------- */
+let BTJ=null;
+function renderRec(){const el=$('recBox');if(!el)return;
+  const go=()=>{if(!JK||!BTJ)return;
+    const P=JK.picks.filter(p=>p.res&&!p.res.void&&(p.key.g==='win'||p.key.g==='loss')),w=P.filter(p=>p.key.g==='win').length,acc=P.length?w/P.length:0;
+    const since=JK.picks.length?new Date(JK.picks.map(p=>p.made).sort()[0]).toLocaleDateString('es-MX',{day:'numeric',month:'long'}):'';
+    const sp=[['fut','⚽ Fútbol'],['nba','🏀 NBA'],['nfl','🏈 NFL']].map(([k,l])=>{const x=P.filter(p=>p.sp===k),ww=x.filter(p=>p.key.g==='win').length;return x.length?{l,n:x.length,w:ww,a:ww/x.length}:null;}).filter(Boolean);
+    const days=[...Array(14)].map((_,i)=>{const d0=dayStart(-13+i),d1=d0+864e5,x=P.filter(p=>{const t=new Date(p.t).getTime();return t>=d0&&t<d1;}),ww=x.filter(p=>p.key.g==='win').length;return{d:new Date(d0),n:x.length,w:ww,a:x.length?ww/x.length:null};});
+    const T=BTJ.replay_total,F=BTJ.replay,N=BTJ.replay_nfl,B=BTJ.replay_nba,M=BTJ.montecarlo;
+    const last=JK.picks.slice().sort((a,b)=>a.t<b.t?1:-1).filter(p=>p.res&&!p.res.void&&['win','loss','push'].includes(p.key.g)).slice(0,12);
+    const bar=(l,a,n,extra)=>`<div class="rbar"><span class="rl">${l}</span><span class="rt"><i style="width:${Math.round(a*100)}%" class="${rc(a)}"></i></span><b>${Math.round(a*100)}%</b><small>${extra||''}</small></div>`;
+    el.innerHTML=`
+    <div class="rhero"><div>${ring(acc,96)}</div><div class="rh-x"><span class="kick">En vivo desde el ${esc(since)}</span><div class="rh-n"><b data-cu="${w}">${w}</b> de <b>${P.length}</b> jugadas clave acertadas</div>
+      <div class="rbars">${sp.map(s=>bar(s.l,s.a,s.n,`${s.w}/${s.n}`)).join('')}</div></div></div>
+    <div class="rsec"><div class="rsec-t">Últimos 14 días</div><div class="cal">${days.map(d=>`<div class="cd ${d.a==null?'x':rc(d.a)}" title="${d.n?d.w+' de '+d.n:'sin jugadas'}"><b>${d.a==null?'·':Math.round(d.a*100)}</b><span>${d.d.getDate()}</span></div>`).join('')}</div>
+      <div class="legend"><span><i class="dot g"></i>75%+</span><span><i class="dot m"></i>60–75%</span><span><i class="dot h"></i>menos</span></div></div>
+    <div class="rsec"><div class="rsec-t">Probado con <b data-cu="${T.partidos}">${T.partidos.toLocaleString('es-MX')}</b> partidos reales</div>
+      <div class="rgrid">
+        <div class="rc"><span>⚽ Fútbol</span><b class="g" data-cu="${(F.jugada_clave.acc*100).toFixed(1)}" data-suf="%">${(F.jugada_clave.acc*100).toFixed(1)}%</b><small>${F.partidos.toLocaleString('es-MX')} partidos · 2021–2026</small></div>
+        <div class="rc"><span>🏀 NBA</span><b class="g" data-cu="${(B.jugada_clave.acc*100).toFixed(1)}" data-suf="%">${(B.jugada_clave.acc*100).toFixed(1)}%</b><small>${B.partidos.toLocaleString('es-MX')} partidos · 2009–2025</small></div>
+        <div class="rc"><span>🏈 NFL</span><b class="g" data-cu="${(N.jugada_clave.acc*100).toFixed(1)}" data-suf="%">${(N.jugada_clave.acc*100).toFixed(1)}%</b><small>${N.partidos.toLocaleString('es-MX')} partidos · 1999–2026</small></div>
+      </div>
+      <div class="rtot"><span>Jugada clave <b>${Math.round(T.clave.acc*100)}%</b></span><span>Jugada más segura <b>${Math.round(T.top1.acc*100)}%</b></span><span>Riesgo bajo <b>${Math.round(M.acierto_bajo*100)}%</b></span></div>
+      <p class="note small">Simulamos cada partido con las cuotas de cierre y comparamos con el marcador final.</p></div>
+    ${M?`<div class="rsec"><div class="rsec-t"><b data-cu="${M.jugadas}">${M.jugadas.toLocaleString('es-MX')}</b> jugadas simuladas (NFL y NBA)</div>
+      <div class="rgrid">
+        <div class="rc"><b data-cu="${Math.round(M['semanas_6+']*100)}" data-suf="%">${Math.round(M['semanas_6+']*100)}%</b><small>de las semanas de 10 jugadas aciertas <b>6 o más</b></small></div>
+        <div class="rc"><b data-cu="${Math.round(M['semanas_7+']*100)}" data-suf="%">${Math.round(M['semanas_7+']*100)}%</b><small>de las semanas aciertas <b>7 o más</b></small></div>
+        <div class="rc"><b data-cu="${Math.round(M.parlay3_bajo*100)}" data-suf="%">${Math.round(M.parlay3_bajo*100)}%</b><small>salen los parlays de <b>3 jugadas de riesgo bajo</b></small></div>
+      </div><p class="note small">Simulación con el acierto real de 26,505 partidos de NFL y NBA. Ninguna jugada es segura y acertar no garantiza ganancias · +18.</p></div>`:''}
+    <div class="rsec"><div class="rsec-t">Últimas jugadas</div><div class="mlist">${last.map(p=>{const g=p.key.g,res=p.res;return`<div class="mrow"><span class="mt">${new Date(p.t).toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</span><span class="mteams"><b><span class="tn">${esc(p.key.k)}</span></b><small class="fn">${esc(p.h)} vs ${esc(p.a)}${res&&!res.void?` · ${res.hs}-${res.as}`:''}</small></span><span class="mk">${g==='win'?'<span class="gmk w">✓</span>':g==='loss'?'<span class="gmk l">✗</span>':'<span class="pill h">pendiente</span>'}</span></div>`;}).join('')}</div></div>
+    <button class="nb" id="recTech" style="width:100%;margin-top:14px;padding:12px">${document.body.classList.contains('rec-tech')?'Ocultar':'Ver'} detalles técnicos</button>`;
+    countUp(el);
+    $('recTech').onclick=()=>{document.body.classList.toggle('rec-tech');renderRec();if(document.body.classList.contains('rec-tech'))setTimeout(()=>{const m=document.getElementById('metodo');if(m)m.scrollIntoView({behavior:'smooth'});},50);};
+  };
+  const need=[];if(typeof JK!=='undefined'&&!JK)need.push(fetch('sys/picks.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(!JK)JK=j;}));
+  if(!BTJ)need.push(fetch('backtest.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{BTJ=j;}));
+  Promise.all(need).then(go).catch(go);}
+window.renderRec=renderRec;
+const rfirst=document.querySelector('#app > [data-v="record"]');
+if(rfirst){const r=document.createElement('div');r.id='recBox';r.className='recbox';r.dataset.v='record';r.style.display=document.body.dataset.view==='record'?'':'none';rfirst.parentNode.insertBefore(r,rfirst);
+  document.querySelectorAll('#app > [data-v="record"]').forEach(x=>{if(x!==r)x.classList.add('rtech');});
+  if(document.body.dataset.view==='record')setTimeout(renderRec,300);}
 /* ---------- Inicio: bloque nuevo arriba de todo ---------- */
 const first=document.getElementById('confianza');
 if(first){const h=document.createElement('div');h.id='homeBox';h.className='homebox';h.dataset.v='inicio';h.style.display=document.body.dataset.view==='inicio'?'':'none';first.parentNode.insertBefore(h,first);}
