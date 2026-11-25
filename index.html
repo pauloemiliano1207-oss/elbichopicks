@@ -596,6 +596,22 @@ header{padding:10px 18px!important;border-bottom:1px solid rgba(255,255,255,.06)
 .pchips:has(.pmode){display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .pmode{min-width:0}
 #parlays .sub{display:none}
+.tl{width:18px;height:18px;flex:0 0 18px;border-radius:50%;object-fit:contain;vertical-align:-4px;margin-right:7px;background:rgba(255,255,255,.06)}
+.tl.ti{display:inline-flex;align-items:center;justify-content:center;font:800 8px Montserrat,sans-serif;color:#fff;letter-spacing:-.02em}
+.mteams b{display:flex;align-items:center}.mteams .tn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc{font-style:normal;margin-left:auto;padding-left:8px;font:800 15px 'League Spartan',Montserrat,sans-serif}.sc.in{color:#ff5a5a}
+.mt.live{color:#ff5a5a;font:800 11px Montserrat,sans-serif;display:flex;align-items:center;gap:5px}.ldot{width:7px;height:7px;border-radius:50%;background:#ff3b3b;flex:0 0 7px;animation:lpulse 1.2s infinite}
+@keyframes lpulse{0%{box-shadow:0 0 0 0 rgba(255,59,59,.6)}70%{box-shadow:0 0 0 7px rgba(255,59,59,0)}100%{box-shadow:0 0 0 0 rgba(255,59,59,0)}}
+.mrow.is-live{background:rgba(255,59,59,.05)}.mt.fin{color:var(--t3);font:700 11px Montserrat,sans-serif}
+.gmk{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;font:900 12px Montserrat,sans-serif;margin-right:5px;vertical-align:middle}
+.gmk.w{background:var(--g);color:#06261d;animation:pop .4s}.gmk.l{background:#ff5a5a;color:#2a0808}.gmk.p{background:var(--h);color:#111}
+@keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.bpk-w{font-size:12px;color:var(--t2);margin-top:6px;line-height:1.35}
+#ticket{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,140%);z-index:69;width:min(500px,calc(100% - 28px));display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:18px;border:1px solid rgba(0,230,168,.5);background:rgba(8,40,31,.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:#fff;font:inherit;text-align:left;cursor:pointer;transition:transform .3s cubic-bezier(.2,.8,.2,1);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#ticket.on{transform:translate(-50%,0)}#ticket.bump{animation:bump .45s}
+@keyframes bump{0%{transform:translate(-50%,0) scale(1)}40%{transform:translate(-50%,0) scale(1.05)}100%{transform:translate(-50%,0) scale(1)}}
+.tk-i{font-size:20px}.tk-t{flex:1;min-width:0}.tk-t b{display:block;font-size:14px}.tk-t small{font-size:11px;color:#b7f5e2}.tk-go{font:800 13px Montserrat,sans-serif;color:var(--menta)}
+body:has(#ticket.on){padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 #hoy.sec{margin-bottom:6px}#hoy .kick{display:none}
 </style>
 </head>
@@ -773,9 +789,9 @@ header{padding:10px 18px!important;border-bottom:1px solid rgba(255,255,255,.06)
 <div class="modal" id="shModal"><div class="mbox" style="max-width:560px"><div class="mhead"><h3>Tarjeta para redes</h3><button class="btn" id="shClose">Cerrar</button></div><div id="shBody"></div></div></div>
 <div class="modal" id="fichaModal"><div class="mbox"><div class="mhead"><h3>Ficha del partido</h3><button class="btn" id="fichaClose">Cerrar</button></div><div id="fichaBody"></div></div></div>
 <div class="tip" id="tip"></div><div class="toast" id="toast"></div>
-<script src="app.js?v=1795583469"></script><script src="hoy.js?v=1795583469"></script>
-<script src="panel.js?v=1795583469"></script>
-<script src="live.js?v=1795583469"></script><script src="router.js?v=1795583469"></script><script src="ui.js?v=1795583469"></script>
+<script src="app.js?v=1795583953"></script><script src="hoy.js?v=1795583953"></script>
+<script src="panel.js?v=1795583953"></script>
+<script src="live.js?v=1795583953"></script><script src="router.js?v=1795583953"></script><script src="vivo.js?v=1795583953"></script><script src="ui.js?v=1795583953"></script>
 <!-- BROMA-12 (temporal: se borra con "borra el 12") -->
 <style>
 #broma12{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);padding:16px}

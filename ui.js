@@ -12,7 +12,7 @@ const firstDay=()=>{for(let o=0;o<7;o++)if(TD.events.some(e=>inDay(e,o)&&!e.pend
 function bestOf(list){const x=list.filter(e=>!e.pending&&e.key).sort((a,b)=>b.key.p-a.key.p);return x[0]||null;}
 function pickCard(e,title){if(!e)return'';const k=e.key;
   return `<div class="bpk ${rc(k.p)}"><div class="bpk-t">${title} · ${RISK[rc(k.p)].toLowerCase()}</div>
-   <div class="bpk-b"><div class="bpk-x"><div class="bpk-k">${esc(k.k)}</div><div class="bpk-m">${SPI[e.sp]||''} ${esc(e.h)} vs ${esc(e.a)} · ${hhmm(e.t)}</div>
+   <div class="bpk-b"><div class="bpk-x"><div class="bpk-k">${esc(k.k)}</div><div class="bpk-m">${SPI[e.sp]||''} ${esc(e.h)} vs ${esc(e.a)} · ${hhmm(e.t)}</div>${window.VIVO?`<div class="bpk-w">💡 ${esc(VIVO.why(e,k))}</div>`:''}
    <div class="bpk-a"><button class="nb" data-fi="${e.id}">Ver ficha</button><button class="nb pri" data-padd="${e.id}">+ Parlay</button></div></div>${ring(k.p,64)}</div></div>`;}
 function bind(el){
   el.querySelectorAll('[data-fi]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();openFicha(b.dataset.fi);});
@@ -30,8 +30,12 @@ window.renderHoy=function(){const el=$('hoyBox');if(!el)return;loadToday(()=>{
   const groups=[];const gi={};list.forEach(e=>{if(!(e.lg in gi)){gi[e.lg]=groups.length;groups.push({lg:e.lg,sp:e.sp,xs:[]});}groups[gi[e.lg]].xs.push(e);});
   const best=bestOf(list);
   const h2=document.querySelector('#hoy h2');if(h2){const dd=days[HDAY];h2.innerHTML=HDAY===0?'Partidos de <em>hoy</em>':HDAY===1?'Partidos de <em>mañana</em>':`Partidos del <em>${dd.l.toLowerCase()} ${dd.n}</em>`;}
-  const row=e=>e.pending?`<div class="mrow pend"><span class="mt">${tm(e.t)}</span><span class="mteams"><b>${esc(e.h)}</b><b>${esc(e.a)}</b></span><span class="mk"><span class="mkk muted">Sin cuotas aún</span></span></div>`
-    :`<div class="mrow" data-fi="${e.id}" role="button" tabindex="0"><span class="mt">${tm(e.t)}</span><span class="mteams"><b>${esc(e.h)}</b><b>${esc(e.a)}</b></span><span class="mk"><span class="mkk">${esc(e.key.k)}</span>${pill(e.key.p)}</span><button class="madd" data-padd="${e.id}" aria-label="Agregar al parlay">+</button></div>`;
+  const V=window.VIVO;
+  const tcell=e=>{const s=V&&V.rowState(e);if(s&&s.st==='in')return`<span class="mt live"><i class="ldot"></i>${esc((s.det||'').replace('Halftime','Medio t.').replace('End of ','Fin ').replace(' - ',' '))}</span>`;if(s&&s.st==='post')return`<span class="mt fin">Final</span>`;return`<span class="mt">${tm(e.t)}</span>`;};
+  const tn=(e,side)=>{const n=side?e.a:e.h,s=V&&V.rowState(e);return`<b>${V?V.badge(n):''}<span class="tn">${esc(n)}</span>${s&&s.st!=='pre'?`<em class="sc ${s.st}">${side?s.as:s.hs}</em>`:''}</b>`;};
+  const mark=e=>{const s=V&&V.rowState(e);if(!s||s.st!=='post'||!e.key)return'';const g=V.grade(e.key.k,e.h,e.a,s.hs,s.as,s);return g==='win'?'<span class="gmk w">✓</span>':g==='loss'?'<span class="gmk l">✗</span>':g==='push'?'<span class="gmk p">=</span>':'';};
+  const row=e=>e.pending?`<div class="mrow pend">${tcell(e)}<span class="mteams">${tn(e,0)}${tn(e,1)}</span><span class="mk"><span class="mkk muted">Sin cuotas aún</span></span></div>`
+    :`<div class="mrow ${(V&&V.rowState(e)||{}).st==='in'?'is-live':''}" data-fi="${e.id}" role="button" tabindex="0">${tcell(e)}<span class="mteams">${tn(e,0)}${tn(e,1)}</span><span class="mk"><span class="mkk">${esc(e.key.k)}</span><span>${mark(e)}${pill(e.key.p)}</span></span><button class="madd" data-padd="${e.id}" aria-label="Agregar al parlay">+</button></div>`;
   el.innerHTML=`<div class="dstrip">${days.map(d=>`<button class="dchip ${HDAY===d.o?'on':''} ${d.c?'':'empty'}" data-hd="${d.o}"><span>${d.l}</span><b>${d.n}</b>${d.c?`<i>${d.c}</i>`:''}</button>`).join('')}</div>
    <div class="schips">${[['all','Todo'],['fut','⚽ Fútbol'],['nba','🏀 NBA'],['nfl','🏈 NFL']].map(([k,l])=>`<button class="schip ${HSP===k?'on':''}" data-hs="${k}">${l}<i>${sc(k)}</i></button>`).join('')}</div>
    ${best?pickCard(best,HDAY===0?'Pick del día':'Pick más probable'):''}
@@ -43,6 +47,7 @@ window.renderHoy=function(){const el=$('hoyBox');if(!el)return;loadToday(()=>{
   el.querySelectorAll('[data-hd]').forEach(b=>b.onclick=()=>{HDAY=+b.dataset.hd;renderHoy();const on=el.querySelector('.dchip.on');if(on)on.scrollIntoView({inline:'center',block:'nearest'});});
   el.querySelectorAll('.mrow[data-fi]').forEach(r=>r.onkeydown=ev=>{if(ev.key==='Enter')openFicha(r.dataset.fi);});
   bind(el);
+  if(window.VIVO){VIVO.ensure(list).then(ch=>{if(ch&&document.body.dataset.view==='hoy')renderHoy();});VIVO.startPoll(()=>renderHoy());}
 });};
 
 /* ---------- INICIO directo ---------- */
@@ -84,6 +89,18 @@ function sync(v){nav.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggl
 const _sv=window.showView;window.showView=function(v,o){_sv(v,o);sync(document.body.dataset.view);if(document.body.dataset.view==='inicio')renderHome();};
 sync(document.body.dataset.view);
 
+
+/* ---------- Boleto flotante del parlay ---------- */
+const tkt=document.createElement('button');tkt.id='ticket';tkt.type='button';document.body.appendChild(tkt);
+let lastN=0;
+function updTicket(){const n=(typeof PAR!=='undefined'&&PAR)?PAR.length:0,v=document.body.dataset.view;
+  if(!n||v==='parlays'){tkt.classList.remove('on');lastN=n;return;}
+  const p=PAR.reduce((a,l)=>a*l.x.p,1),f=1/p;
+  tkt.innerHTML=`<span class="tk-i">🎟️</span><span class="tk-t"><b>${n} pierna${n>1?'s':''}</b><small>${(p*100).toFixed(p<.1?1:0)}% de que salga · cuota justa ${f<1000?f.toFixed(2):Math.round(f)}</small></span><span class="tk-go">Ver ›</span>`;
+  tkt.classList.add('on');if(n!==lastN){tkt.classList.remove('bump');void tkt.offsetWidth;tkt.classList.add('bump');if(n>lastN&&navigator.vibrate)try{navigator.vibrate(12);}catch(_){}}lastN=n;}
+tkt.onclick=()=>showView('parlays');
+if(typeof renderParlay==='function'){const _rp=window.renderParlay;window.renderParlay=function(){const r=_rp.apply(this,arguments);setTimeout(updTicket,0);return r;};}
+const _sv2=window.showView;window.showView=function(v,o){_sv2(v,o);updTicket();};
 /* ---------- Inicio: bloque nuevo arriba de todo ---------- */
 const first=document.getElementById('confianza');
 if(first){const h=document.createElement('div');h.id='homeBox';h.className='homebox';h.dataset.v='inicio';h.style.display=document.body.dataset.view==='inicio'?'':'none';first.parentNode.insertBefore(h,first);}
