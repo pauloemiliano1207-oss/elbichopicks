@@ -1,0 +1,9 @@
+hf: 0  21479 líneas
+date,time,overtime,home_team,home_team_score,away_team,away_team_score,odds1,odds2,bookmakers,winner
+23 Jun 2025  - Play Offs,00:00,no,Oklahoma City Thunder,103,Indiana Pacers,91,1.37,3.14,14,Oklahoma City Thunder
+20 Jun 2025  - Play Offs,00:30,no,Indiana Pacers,108,Oklahoma City Thunder,91,2.79,1.45,14,Indiana Pacers
+filas 21478
+columnas ['date', 'time', 'overtime', 'home_team', 'home_team_score', 'away_team', 'away_team_score', 'odds1', 'odds2', 'bookmakers', 'winner']
+date [('13 M', 162), ('10 M', 156), ('24 D', 154), ('26 J', 153), ('05 M', 150), ('12 M', 148), ('23 M', 147), ('09 F', 147), ('31 D', 146), ('29 D', 143), ('27 D', 143), ('08 M', 142), ('16 J', 142), ('16 M', 141), ('28 M', 140), ('15 M', 140), ('01 M', 140), ('26 M', 139), ('03 J', 139), ('11 M', 138), ('17 M', 137), ('06 A', 136), ('31 M', 135), ('02 M', 135), ('09 M', 134)]
+time [('00:0', 4405), ('01:0', 3667), ('00:3', 2688), ('23:0', 1931), ('02:0', 1894), ('23:3', 1128), ('01:3', 1087), ('03:3', 1039), ('03:0', 976), ('02:3', 830), ('22:0', 396), ('19:3', 252), ('20:3', 248), ('17:0', 205), ('18:0', 168), ('20:0', 153), ('19:0', 109), ('21:0', 88), ('22:3', 49), ('17:3', 24), ('16:0', 18), ('21:3', 17), ('18:3', 13), ('11:3', 11), ('16:3', 10)]
+overtime [('no', 20256), ('yes', 1222)]
