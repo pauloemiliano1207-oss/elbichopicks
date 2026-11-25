@@ -1,4 +1,5 @@
-== 1) Tablas, récord y Elo (ESPN + eloratings) ==
+== 1) Tablas, récord y Elo (football-data.co.uk, nflverse, The Odds API, eloratings) ==
+nba: hoy no toca (cada 3 días)
 epl: 110 partidos (2026-11-23 el más reciente)
 laliga: 129 partidos (2026-11-23 el más reciente)
 seriea: 120 partidos (2026-11-23 el más reciente)
@@ -7,20 +8,22 @@ ligue1: 99 partidos (2026-11-22 el más reciente)
 ligamx: 153 partidos (2026-11-23 el más reciente)
 nfl: ok (nflverse)
 elo: ok
-data.json: actualizado y pruebas OK
+data.json: NO se actualizó. Traceback (most recent call last):
+  File "/tmp/tmp8olx2vst/build_data.py", line 160, in <module>
+    t = {"n": n, "ab": ab, "w": w_, "l": l_, "t": t_, "conf": conf} | blend_pts(n, w_, l_, t_, NFL_PRIOR[n], 24, 6); teams.append(t)
+                                                                                               ~~~~~~~~~^^^
+KeyError: '2026-11-26 15:30'
+
+AVISO: data.json se queda como estaba
 == 1b) NFL: proyecciones de jugadores (nflverse) ==
-pass_yds {"params": {"alpha": 0, "beta": 0.5, "home": 1.0}, "n_val": 228, "mae": 56.68, "mae_promedio_simple": 56.8, "mejora_%": 0.2, "calibracion (n, real, modelo)": {"20-30%": [228, 0.289, 0.253], "50-60%": [215, 0.526, 0.505], "70-80%": [228, 0.772, 0.716], "90-100%": [227, 0.921, 0.909]}, "linea_segura": {"n": 228, "acierto": 0.768}}
-pass_td {"params": {"alpha": 1.2, "beta": 0, "home": 1.0}, "n_val": 226, "mae": 0.87, "mae_promedio_simple": 0.91, "mejora_%": 4.3, "calibracion (n, real, modelo)": {"20-30%": [78, 0.231, 0.262], "30-40%": [185, 0.357, 0.356], "40-50%": [211, 0.488, 0.447], "50-60%": [187, 0.519, 0.545], "60-70%": [144, 0.757, 0.647], "70-80%": [88, 0.784, 0.747]}, "linea_segura": {"n": 173, "acierto": 0.844}}
-rush_yds {"params": {"alpha": 0.4, "beta": 0, "home": 1.03}, "n_val": 538, "mae": 23.34, "mae_promedio_simple": 23.57, "mejora_%": 1.0, "calibracion (n, real, modelo)": {"30-40%": [555, 0.321, 0.336], "40-50%": [497, 0.437, 0.446], "50-60%": [479, 0.505, 0.551], "60-70%": [474, 0.66, 0.665], "70-80%": [132, 0.614, 0.728]}, "linea_segura": {"n": 538, "acierto": 0.727}}
-rec_yds {"params": {"alpha": 0.4, "beta": 0, "home": 1.0}, "n_val": 1310, "mae": 23.25, "mae_promedio_simple": 23.35, "mejora_%": 0.4, "calibracion (n, real, modelo)": {"20-30%": [627, 0.321, 0.285], "30-40%": [1562, 0.387, 0.35], "40-50%": [910, 0.448, 0.451], "50-60%": [1048, 0.537, 0.539], "60-70%": [1087, 0.626, 0.633]}, "linea_segura": {"n": 1310, "acierto": 0.762}}
-rec {"params": {"alpha": 0, "beta": 0, "home": 1.0}, "n_val": 1376, "mae": 1.58, "mae_promedio_simple": 1.58, "mejora_%": 0.0, "calibracion (n, real, modelo)": {"10-20%": [40, 0.225, 0.188], "20-30%": [660, 0.277, 0.26], "30-40%": [1048, 0.346, 0.349], "40-50%": [1413, 0.486, 0.452], "50-60%": [1078, 0.567, 0.552], "60-70%": [834, 0.674, 0.645], "70-80%": [340, 0.759, 0.741], "80-90%": [91, 0.934, 0.882]}, "linea_segura": {"n": 1376, "acierto": 0.85}}
-any_td {"params": {"alpha": 0.8, "beta": 0, "home": 1.0}, "n_val": 1181, "mae": 0.5, "mae_promedio_simple": 0.5, "mejora_%": 0.5, "calibracion (n, real, modelo)": {"10-20%": [992, 0.206, 0.16], "20-30%": [1455, 0.251, 0.249], "30-40%": [1161, 0.314, 0.345], "40-50%": [673, 0.337, 0.444], "50-60%": [310, 0.523, 0.543], "60-70%": [117, 0.538, 0.647]}, "linea_segura": {"n": 0, "acierto": 0.0}}
-props: 16 partidos, 220 jugadores (datos hasta la semana 11)
+props: 17 partidos, 235 jugadores (datos hasta la semana 11)
 == 2) Cuotas, partidos de hoy, alineaciones e historial ==
 selecciones: 0 partidos
-{"n_signals": 98, "n_closed": 25, "clv": 0.0152, "pos": 0.68, "since": "2026-11-18T00:13:54.546Z"} 130 eventos
-153 partidos
-{"creditos_antes": 302, "creditos_restantes": "286", "ligas_sin_consulta": ["soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "ok (37 partidos, 44 consultas)", "historial": "0 jugadas nuevas, 0 calificadas (0 créditos)"}
-primer tiempo: 22 partidos calificados
+{"n_signals": 105, "n_closed": 26, "clv": 0.0159, "pos": 0.692, "since": "2026-11-18T00:13:54.546Z"} 123 eventos
+155 partidos
+{"creditos_antes": 278, "creditos_restantes": "266", "ligas_sin_consulta": ["soccer_mexico_ligamx", "basketball_nba", "soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "ok (39 partidos, 46 consultas)", "historial": "3 jugadas nuevas, 0 calificadas (0 créditos)"}
+primer tiempo: 0 partidos calificados
 == 3) Revisión de seguridad ==
 OK
+== 4) Aviso por Telegram ==
+telegram: sin token
