@@ -43,9 +43,10 @@ def cal(sd, xs):
 for sd in (12.0, 13.0, 14.0):
     out[f'cal_sd{sd}_2021+'] = cal(sd, rec)
 # regla de jugada clave (solo ganador y hándicaps, como en el sitio) con SD elegido
-def key_rule(sd, xs, lo=.62, hi=.85):
+def key_rule(sd, xs, lo=.62, hi=.85, era=False):
     hits = []; exp = []; top1 = []; top1e = []; fav = []; bins = collections.defaultdict(lambda: [0, 0])
     for x in xs:
+        if era: sd = 11.6 if (x['yr'] or 0) <= 2014 else 12.2 if (x['yr'] or 0) <= 2019 else 13.3
         fav_home = x['p'] >= .5; pf = max(x['p'], 1 - x['p']); mu = sd * N.inv_cdf(pf); mf = x['m'] if fav_home else -x['m']
         cands = [('fav', pf, mf > 0)]
         for L in (1.5, 3.5, 5.5, 7.5, 9.5, 12.5):
@@ -71,4 +72,6 @@ for x in rec:
     pf = max(x['p'], 1 - x['p']); w = (x['m'] > 0) == (x['p'] >= .5); k = min(9, int(pf * 10)); b[k][0] += 1; b[k][1] += w; b[k][2] += pf
 out['ml_2021+'] = {f'{k*10}%': [v[0], round(v[1] / v[0], 3), round(v[2] / v[0], 3)] for k, v in sorted(b.items())}
 out['totales_promedio_por_año'] = {y: round(sum(x['t'] for x in reg if x['yr'] == y) / max(1, sum(1 for x in reg if x['yr'] == y)), 1) for y in sorted({x['yr'] for x in reg if x['yr']})}
+out['clave_todo'] = key_rule(13.3, reg, era=True); out['clave_todo']['temporadas'] = f"{min(x['yr'] for x in reg if x['yr'])}-{max(x['yr'] for x in reg if x['yr'])}"
+out['clave_todo']['por_año'] = {y: key_rule(13.3, [x for x in reg if x['yr'] == y], era=True)['acierto'] for y in sorted({x['yr'] for x in reg if x['yr']})}
 json.dump(out, open('research/out/nba.json', 'w'), ensure_ascii=False, indent=1)
