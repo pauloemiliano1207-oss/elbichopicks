@@ -1,0 +1,30 @@
+name: Actualización de la tarde (NBA)
+on:
+  schedule:
+    - cron: '40 21 * * *'   # 3:40 p.m. hora de CDMX
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ['tools/tarde.sh']
+permissions:
+  contents: write
+concurrency: diario
+jobs:
+  nba:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cuotas NBA
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        run: |
+          set -o pipefail
+          bash tools/tarde.sh 2>&1 | tee sys/ultima_tarde.txt
+      - name: Publicar
+        run: |
+          git config user.name "El Bicho Picks"; git config user.email "bot@elbichopicks.pages.dev"
+          git add -A; git diff --cached --quiet && exit 0
+          git commit -m "NBA: cuotas de la tarde $(TZ=America/Mexico_City date +%F)"
+          git push || (git pull --rebase && git push)

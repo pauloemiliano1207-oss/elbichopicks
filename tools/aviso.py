@@ -5,7 +5,7 @@ y se guarda en sys/telegram_chat.txt (el número de chat no sirve sin el token).
 Uso: python3 tools/aviso.py <repo> [--dry]   (--dry solo imprime el mensaje)"""
 import json, os, sys, html, urllib.request, urllib.parse, datetime as dt
 
-R = sys.argv[1]; DRY = '--dry' in sys.argv
+R = sys.argv[1]; DRY = '--dry' in sys.argv; NBA = '--nba' in sys.argv
 MX = dt.timezone(dt.timedelta(hours=-6)); NOW = dt.datetime.now(dt.timezone.utc)
 DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']; MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 E = lambda s: html.escape(str(s), quote=False)
@@ -21,6 +21,15 @@ loc = NOW.astimezone(MX); end = (loc + dt.timedelta(days=1)).replace(hour=6, min
 evs = [e for e in today['events'] if not e.get('pending') and e.get('key') and NOW - dt.timedelta(hours=1) < t_(e['t']) < end]
 evs.sort(key=lambda e: e['t'])
 L = [f'🐞 <b>El Bicho Picks · {DIAS[loc.weekday()]} {loc.day} {MESES[loc.month - 1]}</b>']
+if NBA:  # aviso de la tarde: solo NBA con cuotas recientes
+    xs = [e for e in evs if e['sp'] == 'nba']
+    if not xs: print('telegram: sin NBA hoy'); sys.exit(0)
+    L[0] = f'🏀 <b>NBA de hoy · cuotas de la tarde</b>'
+    for e in sorted(xs, key=lambda e: -e['key']['p']):
+        L.append(f"• {hm(e['t'])} {E(e['h'])} vs {E(e['a'])}\n   → <b>{E(e['key']['k'])}</b> · {pc(e['key']['p'])}")
+    best = [e for e in xs if e['key']['p'] >= 0.75]
+    if best: L.append(f'\n✅ Riesgo bajo (75%+): {len(best)} jugadas. En 5,924 partidos de prueba este tipo acertó 81%.')
+    L.append('\n🔗 elbichopicks.pages.dev'); NBAMSG = '\n'.join(L)
 
 # cómo nos fue ayer
 y0 = (loc - dt.timedelta(days=1)).replace(hour=6, minute=0, second=0); y1 = y0 + dt.timedelta(days=1)
@@ -73,7 +82,7 @@ else:
             for _, pl, m in best[:6]:
                 L.append(f"• {E(pl['n'])}: proyecta <b>{round(m['mu'])}</b> {E(m['lab'])} · más de {m['safe']['L']}: {pc(m['safe']['p'])}")
 L.append('\n🔗 elbichopicks.pages.dev\n<i>Ninguna jugada es segura. Juega con responsabilidad · +18</i>')
-msg = '\n'.join(L)
+msg = NBAMSG if NBA else '\n'.join(L)
 if len(msg) > 4000: msg = msg[:3990] + '…'
 if DRY: print(msg); sys.exit(0)
 

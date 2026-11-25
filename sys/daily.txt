@@ -8,6 +8,7 @@ def get(url,timeout=60):
     with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'bicho/1.0'}),timeout=timeout) as r:
         return json.loads(r.read().decode()),dict(r.headers)
 log={}
+ONLY=[x for x in os.environ.get('BICHO_ONLY','').split(',') if x]; SKIP=[x for x in os.environ.get('BICHO_SKIP','').split(',') if x]
 # A) cuotas (16 créditos)
 SP={'soccer_epl':'h2h,totals','soccer_spain_la_liga':'h2h,totals','soccer_italy_serie_a':'h2h,totals','soccer_germany_bundesliga':'h2h,totals','soccer_mexico_ligamx':'h2h,totals','basketball_nba':'h2h,totals','americanfootball_nfl':'h2h,totals','soccer_france_ligue_one':'h2h','soccer_uefa_champs_league':'h2h','soccer_uefa_nations_league':'h2h,totals'}
 try:
@@ -19,6 +20,7 @@ try:
     for s,mk in SP.items():
         ev,_=get(f'https://api.the-odds-api.com/v4/sports/{s}/events?apiKey={K}')  # gratis: no gasta créditos
         snap['events'][s]=ev
+        if (ONLY and s not in ONLY) or s in SKIP:snap['skipped'].append(s);continue  # se consulta en la otra corrida del día
         ts=[dt.datetime.fromisoformat(e['commence_time'].replace('Z','+00:00')) for e in ev]
         hz=48 if s.startswith(('basketball','americanfootball')) else 72
         if not any(now<t<now+dt.timedelta(hours=hz) for t in ts):snap['skipped'].append(s);continue  # sin partidos cerca: no gastamos créditos
@@ -38,6 +40,7 @@ try:
 except Exception as e:log['cuotas']=f'error: {e}'
 # B) alineaciones (365Scores vía Apify)
 try:
+    if ONLY:raise RuntimeError('solo en la corrida de la mañana')
     def q(p,**o):
         o.update(langId='1',timezone='America/Mexico_City',token=T);return get('https://superapis--365scores.apify.actor'+p+'?'+urllib.parse.urlencode(o),90)[0]
     comps={7:'Premier League',11:'LaLiga',17:'Serie A',25:'Bundesliga',35:'Ligue 1',141:'Liga MX',572:'Champions League'}
@@ -59,7 +62,7 @@ except Exception as e:log['alineaciones']=f'error: {e}'
 try:
     import importlib.util;spec=importlib.util.spec_from_file_location('bp',os.path.join(W,'bicho_picks.py'));bp=importlib.util.module_from_spec(spec);spec.loader.exec_module(bp)
     P=json.load(open('picks.json')) if os.path.exists('picks.json') else {'picks':[]}
-    r=bp.resolve(P,K) if log.get('cuotas')=='ok' else {'resueltos':0}
+    r=bp.resolve(P,K) if log.get('cuotas')=='ok' and not ONLY else {'resueltos':0}
     nlog=bp.log_picks(json.load(open('today.json')),P) if os.path.exists('today.json') else 0
     json.dump(P,open('picks.json','w'),ensure_ascii=False);log['historial']=f"{nlog} jugadas nuevas, {r.get('resueltos',0)} calificadas ({r.get('creditos',0)} créditos)"
 except Exception as e:log['historial']=f'error: {e}'

@@ -11,6 +11,7 @@ def log_picks(today,P,hours=36):
         if e.get('pending') or e.get('own') or e['id'] in seen or e['lg'] not in SK:continue
         t=_iso(e['t'])
         if not(now<t<now+dt.timedelta(hours=hours)):continue
+        if e['sp']=='nba' and t>now+dt.timedelta(hours=10):continue  # NBA: se registra con las cuotas de la tarde, más cercanas al partido
         mini=lambda x:{'k':x['k'],'fam':x['fam'],'p':x['p'],'fair':x['fair'],'odd':x.get('odd'),'book':x.get('book')}
         P['picks'].append({'id':e['id'],'sk':SK[e['lg']],'sp':e['sp'],'lg':e['lg'],'t':e['t'],'h':e['h'],'a':e['a'],'made':now.isoformat().replace('+00:00','Z'),'key':mini(e['key']),'top':[mini(x) for x in e['top']],'res':None})
         n+=1

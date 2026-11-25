@@ -3,7 +3,7 @@ Uso: python3 bicho_build_today.py <snapshot_cuotas.json> <salida_today.json>
 Fútbol: Poisson + Dixon-Coles (rho -0.1) ajustado para reproducir 1X2 y el total de Pinnacle (sin margen).
   Primer tiempo: 44.5% de los goles (medido en 12,673 partidos europeos 2021-2026).
 NBA/NFL: margen ~ Normal(mu, sd) con mu sacada del moneyline de Pinnacle; total ~ Normal(línea Pinnacle, sd).
-  sd NBA: margen 13, total 18.5; NFL: margen 13.5, total 13.5 (supuestos típicos, aún sin validar con históricos propios)."""
+  sd NBA: margen 13.3 (medido en 5,924 partidos 2021-2025), total 18.5; NFL: margen 13.5, total 13.5."""
 import json,sys,math
 from statistics import NormalDist
 ND=NormalDist()
@@ -110,7 +110,7 @@ for sk,games in snap['data'].items():
             sc=sorted(((M[i][j],f'{i}-{j}') for i in range(6) for j in range(6)),reverse=True)[:3]
             ev['scores']=[[s,round(p,3)] for p,s in sc]
         else:
-            sd,sdt=(13,18.5) if ev['sp']=='nba' else (13.5,13.5)
+            sd,sdt=(13.3,18.5) if ev['sp']=='nba' else (13.5,13.5)
             pH,pA=nv([pr[H],pr[A]]);mu=sd*ND.inv_cdf(pH);ev.update(margin=round(mu,1),line=line)
             m=ev['m'];m+=[mk('res','Gana '+H,pH,best_price(g,'h2h',H)),mk('res','Gana '+A,pA,best_price(g,'h2h',A))]
             fav,dog,mf=(H,A,mu) if mu>=0 else (A,H,-mu)

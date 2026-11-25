@@ -17,6 +17,7 @@ jobs:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          BICHO_SKIP: basketball_nba
         run: |
           set -o pipefail
           bash tools/diario.sh 2>&1 | tee sys/ultima_actualizacion.txt
