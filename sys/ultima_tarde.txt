@@ -1,0 +1,8 @@
+{"n_signals": 98, "n_closed": 26, "clv": 0.0159, "pos": 0.692, "since": "2026-11-18T00:13:54.546Z"} 9 eventos
+155 partidos
+Traceback (most recent call last):
+  File "/tmp/tmp.mN1PdIyR8T/bicho_daily.py", line 70, in <module>
+    if os.path.exists(f):assert K not in open(f).read() and T not in open(f).read(),'¡clave filtrada!'
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ¡clave filtrada!
+telegram: sin NBA hoy
