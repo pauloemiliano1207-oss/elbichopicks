@@ -22,13 +22,13 @@ evs = [e for e in today['events'] if not e.get('pending') and e.get('key') and N
 evs.sort(key=lambda e: e['t'])
 L = [f'🐞 <b>El Bicho Picks · {DIAS[loc.weekday()]} {loc.day} {MESES[loc.month - 1]}</b>']
 if NBA:  # aviso de la tarde: solo NBA con cuotas recientes
-    xs = [e for e in evs if e['sp'] == 'nba']
-    if not xs: print('telegram: sin NBA hoy'); sys.exit(0)
-    L[0] = f'🏀 <b>NBA de hoy · cuotas de la tarde</b>'
+    xs = [e for e in evs if e['sp'] == 'nba' or e['lg'] == 'Liga MX']
+    if not xs: print('telegram: sin NBA ni Liga MX hoy'); sys.exit(0)
+    L[0] = f'🌆 <b>Tarde · NBA y Liga MX con cuotas recientes</b>'
     for e in sorted(xs, key=lambda e: -e['key']['p']):
-        L.append(f"• {hm(e['t'])} {E(e['h'])} vs {E(e['a'])}\n   → <b>{E(e['key']['k'])}</b> · {pc(e['key']['p'])}")
+        L.append(f"• {'🏀' if e['sp'] == 'nba' else '⚽'} {hm(e['t'])} {E(e['h'])} vs {E(e['a'])}\n   → <b>{E(e['key']['k'])}</b> · {pc(e['key']['p'])}")
     best = [e for e in xs if e['key']['p'] >= 0.75]
-    if best: L.append(f'\n✅ Riesgo bajo (75%+): {len(best)} jugadas. En 5,924 partidos de prueba este tipo acertó 81%.')
+    if best: L.append(f'\n✅ Riesgo bajo (75%+): {len(best)} jugadas. En la prueba con partidos pasados este tipo acertó 81% (NBA) y 83% (fútbol).')
     L.append('\n🔗 elbichopicks.pages.dev'); NBAMSG = '\n'.join(L)
 
 # cómo nos fue ayer

@@ -1,7 +1,8 @@
 """El Bicho Picks · partidos de hoy con todos los mercados.
 Uso: python3 bicho_build_today.py <snapshot_cuotas.json> <salida_today.json>
 Fútbol: Poisson + Dixon-Coles (rho -0.1) ajustado para reproducir 1X2 y el total de Pinnacle (sin margen).
-  Primer tiempo: 44.5% de los goles (medido en 12,673 partidos europeos 2021-2026).
+  Primer tiempo: 44.5% de los goles (46.7% en la Bundesliga), medido en 12,673 partidos europeos 2021-2026.
+  Ajustar rho por liga no mejoró la predicción fuera de muestra (prueba con 10,796 partidos), así que rho es -0.1 en todas.
 NBA/NFL: margen ~ Normal(mu, sd) con mu sacada del moneyline de Pinnacle; total ~ Normal(línea Pinnacle, sd).
   sd NBA: margen 13.3 (medido en 5,924 partidos 2021-2025), total 18.5; NFL: margen 13.5, total 13.5."""
 import json,sys,math
@@ -105,7 +106,7 @@ for sk,games in snap['data'].items():
                 if L>0.5:m.append(mk('tot',f'Menos de {L} goles',1-po,uu))
             m+= [mk('btts','Ambos anotan: sí',f(lambda i,j:i>0 and j>0)),mk('btts','Ambos anotan: no',f(lambda i,j:i==0 or j==0)),
                  mk('team',H+' anota',1-sum(M[0])),mk('team',H+' mete 2 o más',f(lambda i,j:i>=2)),mk('team',A+' anota',1-sum(M[i][0] for i in range(G))),mk('team',A+' mete 2 o más',f(lambda i,j:j>=2))]
-            l1=(lh+la)*0.445;p1=[pois(l1,k) for k in range(12)]
+            l1=(lh+la)*(0.467 if ev['lg']=='Bundesliga' else 0.445);p1=[pois(l1,k) for k in range(12)]
             m+= [mk('1t','Gol en el 1er tiempo',1-p1[0]),mk('1t','Más de 1.5 goles en el 1er tiempo',1-p1[0]-p1[1]),mk('1t','1er tiempo sin goles',p1[0])]
             sc=sorted(((M[i][j],f'{i}-{j}') for i in range(6) for j in range(6)),reverse=True)[:3]
             ev['scores']=[[s,round(p,3)] for p,s in sc]
