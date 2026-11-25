@@ -2,16 +2,16 @@
 (function(){
   const app=document.getElementById('app');if(!app)return;
   // Bloque inicial -> sección. Todo lo que sigue a un bloque inicial pertenece a esa sección.
-  const START={envivo:'hero',hoy:'hoy',parlays:'parlays',confianza:'inicio',gana:'simulador',sportsM:'simulador',choose:'simulador',metodo:'record',torneos:'torneos',cuotas:'cuotas',avanzado:'simulador',planes:'planes',mispicks:'mispicks',historial:'record',faq:'planes'};
+  const START={envivo:'hero',hoy:'hoy',parlays:'parlays',confianza:'inicio',gana:'simulador',sportsM:'simulador',choose:'simulador',metodo:'record',torneos:'torneos',cuotas:'cuotas',avanzado:'simulador',planes:'oculto',mispicks:'mispicks',historial:'record',faq:'faq'};
   let cur='inicio';
   [...app.children].forEach(el=>{
     if(el.id&&START[el.id])cur=START[el.id];
-    else if(el.classList.contains('sec')&&!el.id&&cur==='planes')cur='record'; // sección final "Datos"
+    else if(el.classList.contains('sec')&&!el.id&&cur==='faq')cur='record'; // sección final "Datos"
     el.dataset.v=cur;
   });
-  const HERO_IN=['inicio','simulador'];
-  const NAMES={inicio:'Inicio',hoy:'Partidos de hoy',parlays:'Parlays',simulador:'Simulador',torneos:'Torneos',cuotas:'Cuotas',record:'Récord',planes:'Planes',mispicks:'Mis picks'};
-  const GO2V={top:'simulador',hoy:'hoy',parlays:'parlays',torneos:'torneos',cuotas:'cuotas',metodo:'record',planes:'planes',mispicks:'mispicks',choose:'simulador',gana:'simulador',analysis:'simulador',rankings:'simulador',historial:'record',faq:'planes',inicio:'inicio'};
+  const HERO_IN=['simulador'];
+  const NAMES={inicio:'Inicio',hoy:'Partidos de hoy',parlays:'Parlays',simulador:'Simulador',torneos:'Torneos',cuotas:'Cuotas',record:'Récord',faq:'Preguntas',mispicks:'Mis picks'};
+  const GO2V={top:'simulador',hoy:'hoy',parlays:'parlays',torneos:'torneos',cuotas:'cuotas',metodo:'record',planes:'faq',mispicks:'mispicks',choose:'simulador',gana:'simulador',analysis:'simulador',rankings:'simulador',historial:'record',faq:'faq',inicio:'inicio'};
   let VIEW=null;
   window.showView=function(v,opts={}){
     if(!NAMES[v])v='inicio';

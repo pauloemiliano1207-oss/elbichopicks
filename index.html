@@ -508,6 +508,80 @@ body{background:
 header{background:rgba(11,11,11,.55)!important;-webkit-backdrop-filter:blur(20px) saturate(170%)!important;backdrop-filter:blur(20px) saturate(170%)!important}
 .modal{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 @media (max-width:700px){.card,.panel,.bigd,.hcard,.pm,.pslip,.faq details,.bigstat div{-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%)}}
+
+/* ===== REDISEÑO 2026 · minimalista, deportivo, navegación inferior ===== */
+:root{--g:#00E6A8;--m:#F5B942;--h:#8a8f98;--rowbg:rgba(255,255,255,.035)}
+body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+/* menos vidrio: superficies planas y ligeras */
+.card,.panel,.bigd,.hcard,.pm,.pslip,.faq details,.bigstat div,.ppl,.wkbox{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.08)!important}
+.card::before,.hcard::before,.pm::before{display:none}
+/* encabezado limpio: sin menú ☰ (la navegación vive abajo); el selector de deporte solo en el simulador */
+#burger,#menu{display:none!important}
+body:not([data-view="simulador"]) #sports{display:none!important}
+header{padding:10px 18px!important;border-bottom:1px solid rgba(255,255,255,.06)!important}
+/* barra inferior */
+#tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));z-index:70;display:flex;gap:2px;width:min(520px,calc(100% - 20px));padding:6px;border-radius:22px;background:rgba(18,18,18,.72);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+#tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 6px;border:0;border-radius:16px;background:none;color:#8a8f98;font:600 11px Montserrat,sans-serif;cursor:pointer;transition:color .15s,background .15s}
+#tabbar button.on{color:var(--menta);background:rgba(0,230,168,.1)}
+#tabbar button:active{transform:scale(.96)}
+/* hoja inferior (ficha y "Más") */
+.modal{-webkit-backdrop-filter:blur(4px)!important;backdrop-filter:blur(4px)!important}
+.sheet{max-width:520px!important;margin-top:auto;border-radius:24px 24px 0 0!important;padding:10px 14px 24px!important;background:#151515!important;border:1px solid rgba(255,255,255,.1)!important}
+.grab{width:42px;height:5px;border-radius:9px;background:rgba(255,255,255,.22);margin:2px auto 12px}
+.maslist{display:flex;flex-direction:column;gap:6px}
+.maslist button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:var(--rowbg);color:#fff;font:inherit;cursor:pointer}
+.maslist .mi{font-size:20px;width:30px;text-align:center}.maslist b{display:block;font-size:15px}.maslist small{color:var(--t3);font-size:12px}.maslist .chev{margin-left:auto;color:var(--t3);font-size:20px}
+#masSheet{align-items:flex-end;padding:0}
+@media(max-width:700px){
+ #fichaModal{align-items:flex-end;padding:0!important}
+ #fichaModal .mbox,#shModal .mbox{border-radius:24px 24px 0 0;max-height:92vh;overflow:auto;width:100%;animation:sheetUp .28s cubic-bezier(.2,.8,.2,1);padding-top:22px;position:relative}
+ #fichaModal .mbox::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:42px;height:5px;border-radius:9px;background:rgba(255,255,255,.22)}
+}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+/* Hoy: tira de fechas + deportes */
+#hoy.sec h2{font-size:clamp(24px,4vw,34px)}#hoy .sub{display:none}
+.dstrip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px;margin:0 -2px}.dstrip::-webkit-scrollbar{display:none}
+.dchip{flex:0 0 auto;min-width:58px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 10px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:var(--rowbg);color:var(--t2);font:600 11px Montserrat,sans-serif;cursor:pointer;position:relative}
+.dchip b{font:800 19px 'League Spartan',Montserrat,sans-serif;color:#fff}.dchip i{font-style:normal;font-size:10px;color:var(--t3)}
+.dchip.on{background:var(--menta);border-color:var(--menta);color:#06261d}.dchip.on b,.dchip.on i{color:#06261d}.dchip.empty{opacity:.45}
+.schips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:14px}.schips::-webkit-scrollbar{display:none}
+.schip{flex:0 0 auto;padding:7px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:none;color:var(--t2);font:600 13px Montserrat,sans-serif;cursor:pointer}
+.schip i{font-style:normal;margin-left:6px;font-size:11px;color:var(--t3)}.schip.on{background:rgba(0,230,168,.12);border-color:rgba(0,230,168,.45);color:#fff}.schip.on i{color:var(--menta)}
+/* pick del día */
+.bpk{padding:14px 16px;border-radius:20px;margin-bottom:16px;border:1px solid rgba(0,230,168,.35);background:linear-gradient(135deg,rgba(0,230,168,.13),rgba(0,230,168,.03))}
+.bpk.m{border-color:rgba(245,185,66,.35);background:linear-gradient(135deg,rgba(245,185,66,.12),rgba(245,185,66,.02))}
+.bpk-t,.pod .bpk-t{font:800 11px Montserrat,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--menta)}.bpk.m .bpk-t{color:var(--m)}
+.bpk-b{display:flex;align-items:center;gap:12px;margin-top:6px}.bpk-x{flex:1;min-width:0}
+.bpk-k{font:800 20px 'League Spartan',Montserrat,sans-serif;line-height:1.15}.bpk-m{font-size:12px;color:var(--t2);margin-top:3px}
+.bpk-a{display:flex;gap:8px;margin-top:10px}
+.nb{padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;font:700 12px Montserrat,sans-serif;cursor:pointer}.nb.pri{background:var(--menta);border-color:var(--menta);color:#06261d}
+.ring .rb{fill:none;stroke:rgba(255,255,255,.1);stroke-width:6}.ring .rf{fill:none;stroke-width:6;stroke-linecap:round}
+.ring.g .rf{stroke:var(--g)}.ring.m .rf{stroke:var(--m)}.ring.h .rf{stroke:var(--h)}.ring text{fill:#fff;font:800 15px 'League Spartan',Montserrat,sans-serif}
+/* lista compacta por liga */
+.lgh{display:flex;justify-content:space-between;align-items:center;margin:16px 2px 6px;font:700 12px Montserrat,sans-serif;color:var(--t2);text-transform:uppercase;letter-spacing:.06em}.lgh span{color:var(--t3)}
+.mlist{border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;background:var(--rowbg)}
+.mrow{display:flex;align-items:center;gap:10px;padding:11px 10px 11px 12px;border-top:1px solid rgba(255,255,255,.06);cursor:pointer;transition:background .12s}
+.mrow:first-child{border-top:0}.mrow:hover{background:rgba(255,255,255,.04)}.mrow:active{background:rgba(0,230,168,.07)}
+.mt{width:44px;flex:0 0 44px;font:700 13px 'League Spartan',Montserrat,sans-serif;color:var(--t2);line-height:1.1}.mt small{display:block;font:600 10px Montserrat,sans-serif;color:var(--t3)}
+.mteams{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.mteams b{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:42%;text-align:right}.mkk{font-size:12px;color:var(--t2);line-height:1.2}.mkk.muted{color:var(--t3)}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font:800 13px 'League Spartan',Montserrat,sans-serif}
+.pill.g{background:rgba(0,230,168,.15);color:var(--g)}.pill.m{background:rgba(245,185,66,.15);color:var(--m)}.pill.h{background:rgba(255,255,255,.08);color:var(--h)}
+.madd{flex:0 0 30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:none;color:var(--menta);font:700 18px Montserrat,sans-serif;line-height:1;cursor:pointer}
+.mrow.pend{opacity:.55;cursor:default}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:14px 2px 4px;font-size:11px;color:var(--t3)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.dot.g{background:var(--g)}.dot.m{background:var(--m)}.dot.h{background:var(--h)}
+.note.small{font-size:11px}
+.empty-st{text-align:center;padding:34px 10px;border:1px dashed rgba(255,255,255,.14);border-radius:16px;display:flex;flex-direction:column;gap:4px}.empty-st span{color:var(--t3);font-size:13px}
+/* Inicio directo */
+.homebox{margin:18px 0 26px}.home-h h1{font:900 clamp(30px,6vw,44px)/1 'League Spartan',Montserrat,sans-serif;text-transform:uppercase;margin:4px 0 14px}.home-h h1 em{font-style:normal;color:var(--menta)}
+.pod{padding:14px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:var(--rowbg);margin-bottom:14px}
+.podl{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06)}.podl:first-of-type{border-top:0;margin-top:6px}
+.podl span{font-weight:600;font-size:14px}.podl small{display:block;color:var(--t3);font-weight:500;font-size:11px}
+.podf{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font-size:12px;color:var(--t2)}.podf b{color:#fff}
+.bigcta{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-radius:18px;border:0;background:var(--menta);color:#06261d;font:800 16px Montserrat,sans-serif;cursor:pointer}.bigcta span{font-size:22px}
+.wkbox{margin-bottom:14px!important}
+@media(min-width:900px){#hoy.sec{max-width:760px;margin-left:auto;margin-right:auto}#hoyBox{max-width:760px;margin:0 auto}.homebox{max-width:760px;margin-left:auto;margin-right:auto}}
+#hoy.sec{margin-bottom:6px}#hoy .kick{display:none}
 </style>
 </head>
 <body>
@@ -684,9 +758,9 @@ header{background:rgba(11,11,11,.55)!important;-webkit-backdrop-filter:blur(20px
 <div class="modal" id="shModal"><div class="mbox" style="max-width:560px"><div class="mhead"><h3>Tarjeta para redes</h3><button class="btn" id="shClose">Cerrar</button></div><div id="shBody"></div></div></div>
 <div class="modal" id="fichaModal"><div class="mbox"><div class="mhead"><h3>Ficha del partido</h3><button class="btn" id="fichaClose">Cerrar</button></div><div id="fichaBody"></div></div></div>
 <div class="tip" id="tip"></div><div class="toast" id="toast"></div>
-<script src="app.js?v=1795558667"></script><script src="hoy.js?v=1795558667"></script>
-<script src="panel.js?v=1795558667"></script>
-<script src="live.js?v=1795558667"></script><script src="router.js?v=1795558667"></script>
+<script src="app.js?v=1795581302"></script><script src="hoy.js?v=1795581302"></script>
+<script src="panel.js?v=1795581302"></script>
+<script src="live.js?v=1795581302"></script><script src="router.js?v=1795581302"></script><script src="ui.js?v=1795581302"></script>
 <!-- BROMA-12 (temporal: se borra con "borra el 12") -->
 <style>
 #broma12{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);padding:16px}
