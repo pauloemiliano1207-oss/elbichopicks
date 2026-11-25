@@ -8,8 +8,10 @@ am=lambda x:1+x/100 if x>0 else 1+100/abs(x)
 def run(rows,SD=13.5,SDT=13.5):
     out=[]
     for r in rows:
-        H,A=r['home_team'],r['away_team'];oh,oa=am(float(r['home_moneyline'])),am(float(r['away_moneyline']))
-        pH=(1/oh)/((1/oh)+(1/oa));pA=1-pH;line=float(r['total_line']);hs,as_=int(r['home_score']),int(r['away_score'])
+        H,A=r['home_team'],r['away_team']
+        if r['home_moneyline'] not in('','NA'):oh,oa=am(float(r['home_moneyline'])),am(float(r['away_moneyline']));pH=(1/oh)/((1/oh)+(1/oa))
+        else:pH=ND.cdf(float(r['spread_line'])/SD);oh,oa=1/pH,1/(1-pH)
+        pA=1-pH;line=float(r['total_line']);hs,as_=int(r['home_score']),int(r['away_score'])
         mu=SD*ND.inv_cdf(pH);ev={'m':[mk('res','Gana '+H,pH,(oh,'cierre')),mk('res','Gana '+A,pA,(oa,'cierre'))]}
         fav,dog,mf=(H,A,mu) if mu>=0 else (A,H,-mu)
         for x in(1.5,3.5,5.5,7.5,9.5,12.5):
@@ -29,13 +31,13 @@ def st(items):
     xs=[(x,gg) for x,gg in items if gg in('win','loss')];n=len(xs);w=sum(gg=='win' for _,gg in xs)
     roi=[(x['odd']-1 if gg=='win' else -1) for x,gg in xs if x.get('odd')]
     return dict(n=n,w=w,acc=round(w/n,3) if n else None,exp=round(sum(x['p'] for x,_ in xs)/n,3) if n else None,roi=round(sum(roi)/len(roi),3) if roi else None)
-rows=[r for r in csv.DictReader(open('games.csv')) if r['home_score'] and r['home_moneyline'] and r['total_line'] and int(r['season'])>=int(__import__('os').environ.get('NFL_FROM','2021'))]
+rows=[r for r in csv.DictReader(open('games.csv')) if r['home_score'] not in('','NA') and (r['home_moneyline'] not in('','NA') or r['spread_line'] not in('','NA')) and r['total_line'] not in('','NA') and int(r['season'])>=int(__import__('os').environ.get('NFL_FROM','2021'))]
 print('partidos',len(rows),rows[0]['gameday'],rows[-1]['gameday'])
-for SD,SDT in[(13.5,13.5),(13.0,13.0),(14.0,13.0),(13.5,12.5)]:
+for SD,SDT in[]:
     o=run(rows,SD,SDT);print(SD,SDT,'clave',st([(x['key'],x['kg']) for x in o]),'top3',st([t for x in o for t in x['top']]))
 o=run(rows)
 R={'desde':rows[0]['gameday'],'hasta':rows[-1]['gameday'],'partidos':len(rows),'jugada_clave':st([(x['key'],x['kg']) for x in o]),'favorito':st([(x['fav'],x['fg']) for x in o]),'top1':st([x['top'][0] for x in o if x['top']]),'top3':st([t for x in o for t in x['top']]),
  'por_riesgo':{l:st([(x['key'],x['kg']) for x in o if lo<=x['key']['p']<hi]) for l,lo,hi in[('bajo (75%+)',.75,1.01),('medio (60-75%)',.6,.75),('alto (<60%)',0,.6)]},
  'por_tipo':{k:st([(x['key'],x['kg']) for x in o if x['key']['fam']==k]) for k in('res','hc','tot')},
  'por_temporada':{s:st([(x['key'],x['kg']) for x in o if x['season']==s]) for s in sorted({x['season'] for x in o})}}
-json.dump(R,open('replay_nfl.json','w'),ensure_ascii=False,indent=1);print(json.dumps(R,ensure_ascii=False,indent=1))
+json.dump(R,open('replay_nfl_max.json','w'),ensure_ascii=False,indent=1);print({k:R[k] for k in ('partidos','desde','hasta','jugada_clave','top1','favorito','por_riesgo')})
