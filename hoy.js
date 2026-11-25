@@ -97,42 +97,69 @@ function drawFicha(e){
   $('fichaBody').querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>{const x=e.m.find(y=>y.k===b.dataset.leg);addLeg(e,x);});
 }
 
-/* ---------- PARLAYS ---------- */
-const PMODES={seg:{n:'Seguro',d:'Piernas de 72% a 90%. Sale seguido, paga poco.',lo:.72,hi:.90,legs:3},eq:{n:'Equilibrado',d:'Piernas de 60% a 80%. Balance entre probabilidad y pago.',lo:.60,hi:.80,legs:3},jug:{n:'Jugoso',d:'Piernas de 50% a 70%. Paga mucho, falla seguido.',lo:.50,hi:.70,legs:4}};
+/* ---------- PARLAYS (personalizable: deportes combinados, ligas, mercados, jugadores NFL y hasta 15 piernas) ---------- */
+const PMODES={seg:{n:'Seguro',d:'72% a 90% por pierna',lo:.72,hi:.90,legs:3},eq:{n:'Equilibrado',d:'60% a 80%',lo:.60,hi:.80,legs:3},jug:{n:'Jugoso',d:'50% a 70%',lo:.50,hi:.70,legs:4},cus:{n:'A mi gusto',d:'tú eliges el mínimo',lo:.65,hi:.95,legs:5}};
+let PSPS=new Set(['fut','nba','nfl']),PLGS=new Set(),PMK=new Set(['res','gol','hc']),PMIX='best',PMIN=65;
+const MKG={res:{n:'Resultado',f:['res','dc']},gol:{n:'Goles / puntos',f:['tot','team','btts','1t']},hc:{n:'Hándicap',f:['hc']},prop:{n:'Jugadores NFL',f:['prop']}};
+const SPIC={fut:'⚽',nba:'🏀',nfl:'🏈'};
+function pRange(){const md=PMODES[PMODE];return PMODE==='cus'?[PMIN/100,.95]:[md.lo,md.hi];}
+function pEvents(){return TD.events.filter(e=>!e.pending&&e.m&&e.m.length&&inDay(e,PDAY)&&PSPS.has(e.sp)&&(e.sp!=='fut'||!PLGS.size||PLGS.has(e.lg)));}
+function propCands(e){if(!PMK.has('prop')||e.sp!=='nfl'||typeof propsGame!=='function'||!PROPS)return[];const g=propsGame(e);if(!g)return[];const out=[];
+  g.players.forEach(pl=>pl.m.forEach(m=>{if(m.s==='any_td')out.push({fam:'prop',k:`${pl.n} anota touchdown`,p:m.p,fair:+(1/m.p).toFixed(2)});else if(m.safe)out.push({fam:'prop',k:`${pl.n}: más de ${m.safe.L} ${m.lab}`,p:m.safe.p,fair:+(1/m.safe.p).toFixed(2)});}));return out;}
+function candsFor(e){const[lo,hi]=pRange();const fams=new Set([...PMK].flatMap(k=>MKG[k].f));
+  return [...e.m.filter(x=>fams.has(x.fam)),...propCands(e)].filter(x=>x.p>=lo&&x.p<=hi&&x.fam!=='dnb').sort((a,b)=>b.p-a.p);}
 function addLeg(e,x){if(!e||!x)return;PAR=PAR.filter(l=>l.e.id!==e.id);PAR.push({e,x});renderParlay();toast('Agregado al parlay: '+x.k);}
-function genParlay(seed){const md=PMODES[PMODE];const evs=TD.events.filter(e=>(PSP==='all'||e.sp===PSP)&&inDay(e,PDAY));
-  const pool=[];for(const e of evs){const c=e.m.filter(x=>x.p>=md.lo&&x.p<=md.hi&&x.fam!=='dnb');if(!c.length)continue;
-    // preferimos la jugada clave si cae en el rango; si no, la de mayor probabilidad
-    c.sort((a,b)=>b.p-a.p);const k=c.find(x=>x.k===e.key.k)||c[0];pool.push({e,x:k,alt:c});}
+function genParlay(seed){
+  if(PMK.has('prop')&&PSPS.has('nfl')&&typeof loadProps==='function'&&!PROPS){loadProps(()=>genParlay(seed));return;}
+  const pool=[];for(const e of pEvents()){const c=candsFor(e);if(!c.length)continue;const k=c.find(x=>e.key&&x.k===e.key.k)||c[0];pool.push({e,x:k,alt:c});}
   pool.sort((a,b)=>b.x.p-a.x.p);
-  let pick=pool.slice(0,PN);
-  if(seed){const sh=[...pool].sort(()=>Math.random()-.5);pick=sh.slice(0,PN).map(o=>({e:o.e,x:o.alt[Math.floor(Math.random()*Math.min(3,o.alt.length))]}));}
+  let src=pool;
+  if(seed){src=pool.slice(0,Math.max(PN*3,PN+4)).sort(()=>Math.random()-.5).map(o=>({e:o.e,x:o.alt[Math.floor(Math.random()*Math.min(3,o.alt.length))]}));}
+  let pick;
+  if(PMIX==='mix'&&PSPS.size>1){const by={};src.forEach(o=>(by[o.e.sp]=by[o.e.sp]||[]).push(o));const ks=Object.keys(by);pick=[];let i=0;
+    while(pick.length<PN&&ks.some(k=>by[k].length)){const k=ks[i%ks.length];if(by[k].length)pick.push(by[k].shift());i++;}}
+  else pick=src.slice(0,PN);
   PAR=pick.map(o=>({e:o.e,x:o.x}));renderParlay();}
+function swapLeg(i){const l=PAR[i];if(!l)return;const c=candsFor(l.e);if(!c.length){toast('No hay otra jugada en este partido con estos filtros');return;}
+  const j=c.findIndex(x=>x.k===l.x.k);PAR[i]={e:l.e,x:c[(j+1)%c.length]};renderParlay();}
 function renderParlay(){const el=$('parBox');if(!el)return;loadToday(()=>{
-  const md=PMODES[PMODE];const cnt=TD.events.filter(e=>(PSP==='all'||e.sp===PSP)&&inDay(e,PDAY)).length;
+  const evs=pEvents(),avail=evs.filter(e=>candsFor(e).length).length;
+  const lgs=[...new Set(TD.events.filter(e=>!e.pending&&e.sp==='fut'&&inDay(e,PDAY)).map(e=>e.lg))];
   const p=PAR.reduce((a,l)=>a*l.x.p,1),fair=PAR.length?1/p:0,allOdd=PAR.length&&PAR.every(l=>l.x.odd),real=allOdd?PAR.reduce((a,l)=>a*l.x.odd,1):fair*Math.pow(.95,PAR.length),ev=PAR.length?p*real-1:0;
-  const oneIn=p>0?Math.max(1,Math.round(1/p)):0;
-  el.innerHTML=`<div class="pgrid"><div>
-   <div class="lbl">1. Tipo de parlay</div><div class="pmodes">${Object.entries(PMODES).map(([k,v])=>`<button class="pm ${PMODE===k?'on':''}" data-pm="${k}"><b>${v.n}</b><span>${v.d}</span></button>`).join('')}</div>
-   <div class="lbl">2. ¿Cuándo?</div><div class="seg">${[['Hoy',0],['Mañana',1],['Semana',7]].map(([l,d])=>`<button class="${PDAY===d?'on':''}" data-pd="${d}">${l}</button>`).join('')}</div>
-   <div class="lbl">3. Deporte</div><div class="seg">${[['all','Todo'],['fut','Fútbol'],['nba','NBA'],['nfl','NFL']].map(([k,l])=>`<button class="${PSP===k?'on':''}" data-ps="${k}">${l}</button>`).join('')}</div>
-   <div class="lbl">4. Número de piernas: <b id="pnv">${PN}</b></div><input type="range" min="2" max="6" value="${PN}" id="pnr" style="width:100%">
-   <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn menta" id="pGen">⚡ Armar parlay</button><button class="btn" id="pShuf">🎲 Otra combinación</button><button class="btn" id="pClr">Limpiar</button></div>
-   <p class="note">${cnt} partidos disponibles. Usamos una sola pierna por partido para no mezclar resultados que dependen entre sí. También puedes agregar piernas desde “Partidos de hoy” con <b>+ Parlay</b>.</p>
+  const oneIn=p>0?Math.max(1,Math.round(1/p)):0,pct=x=>(x*100).toFixed(x<.01?2:x<.1?1:0)+'%';
+  const chip=(on,attr,label,extra='')=>`<button class="schip ${on?'on':''}" ${attr}>${label}${extra}</button>`;
+  const sc=s=>TD.events.filter(e=>!e.pending&&e.sp===s&&inDay(e,PDAY)).length;
+  el.innerHTML=`<div class="pgrid"><div class="pctl">
+   <div class="lbl">Estilo</div><div class="pchips">${Object.entries(PMODES).map(([k,v])=>`<button class="pmode ${PMODE===k?'on':''}" data-pm="${k}"><b>${v.n}</b><span>${v.d}</span></button>`).join('')}</div>
+   ${PMODE==='cus'?`<div class="prow"><span>Probabilidad mínima por pierna</span><b>${PMIN}%</b></div><input type="range" min="50" max="90" step="1" value="${PMIN}" id="pminr" style="width:100%">`:''}
+   <div class="lbl">Deportes <small>(combínalos)</small></div><div class="pchips">${['fut','nba','nfl'].map(s=>chip(PSPS.has(s),`data-psp="${s}"`,`${SPIC[s]} ${SPN[s]}`,`<i>${sc(s)}</i>`)).join('')}</div>
+   ${PSPS.size>1?`<div class="pchips mt6">${chip(PMIX==='best','data-mix="best"','Lo más probable')}${chip(PMIX==='mix','data-mix="mix"','Repartido entre deportes')}</div>`:''}
+   ${PSPS.has('fut')&&lgs.length>1?`<div class="lbl">Ligas de fútbol</div><div class="pchips">${chip(!PLGS.size,'data-plg=""','Todas')}${lgs.map(l=>chip(PLGS.has(l),`data-plg="${esc(l)}"`,esc(l))).join('')}</div>`:''}
+   <div class="lbl">Mercados</div><div class="pchips">${Object.entries(MKG).filter(([k])=>k!=='prop'||PSPS.has('nfl')).map(([k,v])=>chip(PMK.has(k),`data-pmk="${k}"`,v.n)).join('')}</div>
+   <div class="lbl">¿Cuándo?</div><div class="pchips">${[['Hoy',0],['Mañana',1],['Toda la semana',7]].map(([l,d])=>chip(PDAY===d,`data-pd="${d}"`,l)).join('')}</div>
+   <div class="prow"><span>Piernas</span><b id="pnv">${PN}</b></div><input type="range" min="2" max="15" value="${PN}" id="pnr" style="width:100%">
+   <div class="pbtns"><button class="nb pri" id="pGen">⚡ Armar parlay</button><button class="nb" id="pShuf">🎲 Otra combinación</button><button class="nb" id="pClr">Limpiar</button></div>
+   <p class="note small">${avail} partidos cumplen tus filtros${avail<PN?` · <b>solo alcanzan para ${avail} piernas</b>; abre la semana, más ligas o más mercados`:''}. Una pierna por partido para no mezclar jugadas que dependen entre sí.</p>
   </div><div class="pslip">
-   <div class="lbl">Tu parlay</div>
-   ${PAR.length?PAR.map((l,i)=>`<div class="leg"><div><div class="kk">${esc(l.x.k)}</div><div class="fn">${esc(l.e.h)} vs ${esc(l.e.a)} · ${esc(l.e.lg)} · ${dlab(l.e.t)} ${hhmm(l.e.t)}</div></div><b>${p0(l.x.p)}</b><button class="x" data-rm="${i}">×</button></div>`).join(''):'<p class="note">Elige un tipo y toca <b>Armar parlay</b>.</p>'}
-   ${PAR.length?`<div class="psum"><div><span>Probabilidad de que salga</span><b class="big">${(p*100).toFixed(p<.1?1:0)}%</b><span class="fn">≈ 1 de cada ${oneIn} veces</span></div>
-     <div><span>Cuota justa</span><b>${fair.toFixed(2)}</b><span class="fn">si apuestas $100 → $${Math.round(fair*100)}</span></div>
-     <div><span>${allOdd?'Mejor cuota real':'Cuota aprox. en tu casa'}</span><b>${real.toFixed(2)}</b><span class="fn">${allOdd?'combinando las mejores casas':'restando ~5% de comisión por pierna'}</span></div></div>
-     <div class="pwarn">${ev>=0?'✅ A estas cuotas el parlay tendría ventaja según el modelo. Confirma las cuotas de tu casa.':'💡 Busca la mejor cuota en tu casa: cada pierna lleva comisión. Juega por diversión y solo lo que puedas perder · +18.'}</div>`:''}
+   <div class="lbl">Tu parlay ${PAR.length?`<span class="pcount">${PAR.length} piernas</span>`:''}</div>
+   ${PAR.length?PAR.map((l,i)=>`<div class="legx"><span class="lsp">${SPIC[l.e.sp]||''}</span><div class="lmain"><div class="kk">${esc(l.x.k)}</div><div class="fn">${esc(l.e.h)} vs ${esc(l.e.a)} · ${dlab(l.e.t)} ${hhmm(l.e.t)}</div></div><span class="pill ${l.x.p>=.75?'g':l.x.p>=.6?'m':'h'}">${p0(l.x.p)}</span><button class="lbtn" data-sw="${i}" title="Cambiar jugada">⇄</button><button class="lbtn" data-rm="${i}" title="Quitar">×</button></div>`).join(''):'<p class="note">Elige tus filtros y toca <b>Armar parlay</b>. También puedes agregar piernas desde Hoy con <b>+</b>.</p>'}
+   ${PAR.length?`<div class="psum"><div><span>Probabilidad de que salga</span><b class="big">${pct(p)}</b><span class="fn">≈ 1 de cada ${oneIn.toLocaleString('es-MX')} veces</span></div>
+     <div><span>Cuota justa</span><b>${fair<1000?fair.toFixed(2):Math.round(fair).toLocaleString('es-MX')}</b><span class="fn">$100 → $${Math.round(fair*100).toLocaleString('es-MX')}</span></div>
+     <div><span>${allOdd?'Mejor cuota real':'Cuota aprox. en tu casa'}</span><b>${real<1000?real.toFixed(2):Math.round(real).toLocaleString('es-MX')}</b><span class="fn">${allOdd?'mejores casas':'~5% de comisión por pierna'}</span></div></div>
+     ${PAR.length>=8?`<div class="pwarn">⚠️ Con ${PAR.length} piernas, aunque cada una sea probable, todas juntas salen ${pct(p)} de las veces. Es para buscar un premio grande con poco dinero.</div>`:''}
+     <div class="pwarn">${ev>=0?'✅ A estas cuotas el parlay tendría ventaja según el modelo. Confirma las cuotas de tu casa.':'💡 Cada pierna lleva comisión de la casa. Juega por diversión y solo lo que puedas perder · +18.'}</div>`:''}
   </div></div>`;
-  el.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{PMODE=b.dataset.pm;PN=PMODES[PMODE].legs;genParlay();});
+  el.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{PMODE=b.dataset.pm;if(PN<PMODES[PMODE].legs||PMODE!=='cus')PN=Math.max(PN,PMODES[PMODE].legs);genParlay();});
+  el.querySelectorAll('[data-psp]').forEach(b=>b.onclick=()=>{const s=b.dataset.psp;if(PSPS.has(s)){if(PSPS.size>1)PSPS.delete(s);}else PSPS.add(s);genParlay();});
+  el.querySelectorAll('[data-mix]').forEach(b=>b.onclick=()=>{PMIX=b.dataset.mix;genParlay();});
+  el.querySelectorAll('[data-plg]').forEach(b=>b.onclick=()=>{const l=b.dataset.plg;if(!l)PLGS.clear();else if(PLGS.has(l))PLGS.delete(l);else PLGS.add(l);genParlay();});
+  el.querySelectorAll('[data-pmk]').forEach(b=>b.onclick=()=>{const k=b.dataset.pmk;if(PMK.has(k)){if(PMK.size>1)PMK.delete(k);}else PMK.add(k);genParlay();});
   el.querySelectorAll('[data-pd]').forEach(b=>b.onclick=()=>{PDAY=+b.dataset.pd;genParlay();});
-  el.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{PSP=b.dataset.ps;genParlay();});
+  if($('pminr')){$('pminr').oninput=e=>{PMIN=+e.target.value;e.target.previousElementSibling.querySelector('b').textContent=PMIN+'%';};$('pminr').onchange=()=>genParlay();}
   $('pnr').oninput=e=>{PN=+e.target.value;$('pnv').textContent=PN;};$('pnr').onchange=()=>genParlay();
   $('pGen').onclick=()=>genParlay();$('pShuf').onclick=()=>genParlay(true);$('pClr').onclick=()=>{PAR=[];renderParlay();};
   el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{PAR.splice(+b.dataset.rm,1);renderParlay();});
+  el.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>swapLeg(+b.dataset.sw));
 });}
 function initHoy(){
   renderJK();renderBigStat();
