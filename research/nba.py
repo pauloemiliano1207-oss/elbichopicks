@@ -44,7 +44,7 @@ for sd in (12.0, 13.0, 14.0):
     out[f'cal_sd{sd}_2021+'] = cal(sd, rec)
 # regla de jugada clave (solo ganador y hándicaps, como en el sitio) con SD elegido
 def key_rule(sd, xs, lo=.62, hi=.85):
-    hits = []; exp = []
+    hits = []; exp = []; top1 = []; top1e = []; fav = []; bins = collections.defaultdict(lambda: [0, 0])
     for x in xs:
         fav_home = x['p'] >= .5; pf = max(x['p'], 1 - x['p']); mu = sd * N.inv_cdf(pf); mf = x['m'] if fav_home else -x['m']
         cands = [('fav', pf, mf > 0)]
@@ -56,8 +56,14 @@ def key_rule(sd, xs, lo=.62, hi=.85):
             if not ok: continue
             c = max(ok, key=lambda c: c[1])
         hits.append(c[2]); exp.append(c[1])
-    return {'n': len(hits), 'acierto': round(sum(hits) / len(hits), 4), 'esperado': round(sum(exp) / len(exp), 4)}
-for sd in (12.0, 13.0, 14.0):
+        ok2 = [c for c in cands if .55 <= c[1] <= .90]
+        if ok2: t1 = max(ok2, key=lambda c: c[1]); top1.append(t1[2]); top1e.append(t1[1])
+        if c[0] == 'fav': fav.append(c[2])
+        bk = 'bajo' if c[1] >= .75 else 'medio'; bins[bk][0] += 1; bins[bk][1] += c[2]
+    return {'n': len(hits), 'acierto': round(sum(hits) / len(hits), 4), 'esperado': round(sum(exp) / len(exp), 4),
+            'top1': [len(top1), round(sum(top1) / len(top1), 4), round(sum(top1e) / len(top1e), 4)],
+            'riesgo': {k: [v[0], round(v[1] / v[0], 4)] for k, v in bins.items()}, 'temporadas': '2021-2025'}
+for sd in (13.0, 13.3):
     out[f'clave_sd{sd}_2021+'] = key_rule(sd, rec)
 # moneyline: calibración de la cuota promedio
 b = collections.defaultdict(lambda: [0, 0, 0.0])
