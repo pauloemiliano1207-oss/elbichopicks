@@ -1,4 +1,4 @@
-{"n_signals": 98, "n_closed": 26, "clv": 0.0159, "pos": 0.692, "since": "2026-11-18T00:13:54.546Z"} 13 eventos
-155 partidos
-{"creditos_antes": 282, "creditos_restantes": "278", "ligas_sin_consulta": ["soccer_epl", "soccer_spain_la_liga", "soccer_italy_serie_a", "soccer_germany_bundesliga", "americanfootball_nfl", "soccer_france_ligue_one", "soccer_uefa_champs_league", "soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "error: solo en la corrida de la mañana", "historial": "0 jugadas nuevas, 0 calificadas (0 créditos)"}
-telegram: sin NBA ni Liga MX hoy
+{"n_signals": 105, "n_closed": 32, "clv": 0.0198, "pos": 0.719, "since": "2026-11-18T00:13:54.546Z"} 12 eventos
+146 partidos
+{"creditos_antes": 266, "creditos_restantes": "262", "ligas_sin_consulta": ["soccer_epl", "soccer_spain_la_liga", "soccer_italy_serie_a", "soccer_germany_bundesliga", "americanfootball_nfl", "soccer_france_ligue_one", "soccer_uefa_champs_league", "soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "error: solo en la corrida de la mañana", "historial": "9 jugadas nuevas, 0 calificadas (0 créditos)"}
+telegram: sin token
