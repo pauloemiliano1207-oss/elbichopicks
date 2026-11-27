@@ -1,27 +1,26 @@
 == 1) Tablas, récord y Elo (football-data.co.uk, nflverse, The Odds API, eloratings) ==
-nba: hoy no toca (cada 3 días)
+nba: inicio, 12 partidos marcados
 epl: 110 partidos (2026-11-23 el más reciente)
 laliga: 129 partidos (2026-11-23 el más reciente)
 seriea: 120 partidos (2026-11-23 el más reciente)
 bund: 90 partidos (2026-11-22 el más reciente)
 ligue1: 99 partidos (2026-11-22 el más reciente)
-ligamx: 153 partidos (2026-11-23 el más reciente)
+ligamx: 157 partidos (2026-11-27 el más reciente)
 nfl: ok (nflverse)
-elo: ok
 data.json: NO se actualizó. Traceback (most recent call last):
-  File "/tmp/tmptleto__e/build_data.py", line 160, in <module>
+  File "/tmp/tmpubj__g35/build_data.py", line 160, in <module>
     t = {"n": n, "ab": ab, "w": w_, "l": l_, "t": t_, "conf": conf} | blend_pts(n, w_, l_, t_, NFL_PRIOR[n], 24, 6); teams.append(t)
                                                                                                ~~~~~~~~~^^^
 KeyError: '2026-11-26 15:30'
 
 AVISO: data.json se queda como estaba
 == 1b) NFL: proyecciones de jugadores (nflverse) ==
-props: 16 partidos, 216 jugadores (datos hasta la semana 12)
+props: 13 partidos, 176 jugadores (datos hasta la semana 12)
 == 2) Cuotas, partidos de hoy, alineaciones e historial ==
 selecciones: 0 partidos
-{"n_signals": 112, "n_closed": 32, "clv": 0.0198, "pos": 0.719, "since": "2026-11-18T00:13:54.546Z"} 112 eventos
-162 partidos
-{"creditos_antes": 262, "creditos_restantes": "251", "ligas_sin_consulta": ["soccer_mexico_ligamx", "basketball_nba", "soccer_uefa_champs_league", "soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "ok (47 partidos, 54 consultas)", "historial": "6 jugadas nuevas, 31 calificadas (8 créditos)"}
+{"n_signals": 122, "n_closed": 34, "clv": 0.021, "pos": 0.735, "since": "2026-11-18T00:13:54.546Z"} 110 eventos
+165 partidos
+{"creditos_antes": 237, "creditos_restantes": "226", "ligas_sin_consulta": ["soccer_mexico_ligamx", "basketball_nba", "soccer_uefa_champs_league", "soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "ok (48 partidos, 55 consultas)", "historial": "20 jugadas nuevas, 0 calificadas (0 créditos)"}
 primer tiempo: 0 partidos calificados
 == 3) Revisión de seguridad ==
 OK
