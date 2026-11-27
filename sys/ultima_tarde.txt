@@ -1,4 +1,4 @@
-{"n_signals": 113, "n_closed": 33, "clv": 0.0201, "pos": 0.727, "since": "2026-11-18T00:13:54.546Z"} 3 eventos
-163 partidos
-{"creditos_antes": 243, "creditos_restantes": "239", "ligas_sin_consulta": ["soccer_epl", "soccer_spain_la_liga", "soccer_italy_serie_a", "soccer_germany_bundesliga", "americanfootball_nfl", "soccer_france_ligue_one", "soccer_uefa_champs_league", "soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "error: solo en la corrida de la mañana", "historial": "2 jugadas nuevas, 0 calificadas (0 créditos)"}
+{"n_signals": 127, "n_closed": 38, "clv": 0.0243, "pos": 0.737, "since": "2026-11-18T00:13:54.546Z"} 14 eventos
+157 partidos
+{"creditos_antes": 226, "creditos_restantes": "222", "ligas_sin_consulta": ["soccer_epl", "soccer_spain_la_liga", "soccer_italy_serie_a", "soccer_germany_bundesliga", "americanfootball_nfl", "soccer_france_ligue_one", "soccer_uefa_champs_league", "soccer_uefa_nations_league"], "cuotas": "ok", "alineaciones": "error: solo en la corrida de la mañana", "historial": "11 jugadas nuevas, 0 calificadas (0 créditos)"}
 telegram: sin token
